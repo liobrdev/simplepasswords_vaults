@@ -1,3 +1,4 @@
+/simplepasswords_vaults
 /.env
 /secret_files
 /test_db/*

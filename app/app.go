@@ -34,6 +34,7 @@ func CreateApp(conf *config.AppConfig) (*fiber.App, *gorm.DB) {
 		TrustedProxies:          trustedProxies,
 		JSONEncoder:             json.Marshal,
 		JSONDecoder:             json.Unmarshal,
+		Prefork:                 true,
 	})
 
 	db := database.Init(conf)

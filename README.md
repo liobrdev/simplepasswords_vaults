@@ -26,7 +26,7 @@ Each of the environment variables in the following table **must** be an **absolu
 | GO_FIBER_REDIS_PASSWORD           | Redis cache password.                                                                                      | `string`      | `""`              |
 | GO_FIBER_SECRET_KEY               | Secret key for various app-level encryption methods.                                                       | `string`      | `""`              |
 | GO_FIBER_SERVER_HOST              | Fiber app will be run from this host.                                                                      | `string`      | `"localhost"`     |
-| GO_FIBER_SERVER_PORT              | Fiber app will be run from host using this port.                                                           | `string`      | `"8000"`          |
+| GO_FIBER_SERVER_PORT              | Fiber app will be run from host using this port.                                                           | `string`      | `"8080"`          |
 
 ### Methods For Setting Environment Variables
 

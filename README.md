@@ -13,20 +13,20 @@ Clone this repository: `git clone https://github.com/liobrdev/simplepasswords_va
 
 Each of the environment variables in the following table **must** be an **absolute path** to an existent `UTF-8`-encoded text file. The contents of the first line of this text file will be parsed to a Go data type (empty file contents will be parsed with a default value). This data will then be saved to the AppConfig field whose name matches that of the corresponding environment variable.
 
-| **Required Environment Variable** | **Description of File Contents**                                                                           | **Data Type** | **Default Value** |
-|-----------------------------------|------------------------------------------------------------------------------------------------------------|---------------|-------------------|
-| GO_FIBER_ENVIRONMENT              | Should be either `development`, `production`, or `testing`.                                                | `string`      | `"development"`   |
-| GO_FIBER_BEHIND_PROXY             | Configures Fiber server setting `EnableTrustedProxyCheck bool`. Should be either `true` or `false`.        | `bool`        | `false`           |
-| GO_FIBER_PROXY_IP_ADDRESSES       | Configures Fiber server setting `TrustedProxies []string`. Should be comma-separated IP address string(s). | `[]string`    | `[]string{""}`    |
-| GO_FIBER_VAULTS_DB_USER           | PostgreSQL database user.                                                                                  | `string`      | `""`              |
-| GO_FIBER_VAULTS_DB_PASSWORD       | PostgreSQL database password.                                                                              | `string`      | `""`              |
-| GO_FIBER_VAULTS_DB_HOST           | PostgreSQL database host.                                                                                  | `string`      | `""`              |
-| GO_FIBER_VAULTS_DB_PORT           | PostgreSQL database port.                                                                                  | `string`      | `""`              |
-| GO_FIBER_VAULTS_DB_NAME           | PostgreSQL database name.                                                                                  | `string`      | `""`              |
-| GO_FIBER_REDIS_PASSWORD           | Redis cache password.                                                                                      | `string`      | `""`              |
-| GO_FIBER_SECRET_KEY               | Secret key for various app-level encryption methods.                                                       | `string`      | `""`              |
-| GO_FIBER_SERVER_HOST              | Fiber app will be run from this host.                                                                      | `string`      | `"localhost"`     |
-| GO_FIBER_SERVER_PORT              | Fiber app will be run from host using this port.                                                           | `string`      | `"8080"`          |
+| **Required Environment Variable** | **Description of File Contents** | **Data Type** | **Default Value** |
+|-----------------------------------|----------------------------------|---------------|-------------------|
+| GO_FIBER_ENVIRONMENT | Should be either `development`, `production`, or `testing`. | `string` | `"development"` |
+| GO_FIBER_BEHIND_PROXY | Configures Fiber server setting `EnableTrustedProxyCheck bool`. Should be either `true` or `false`. | `bool` | `false` |
+| GO_FIBER_PROXY_IP_ADDRESSES | Configures Fiber server setting `TrustedProxies []string`. Should be comma-separated IP address string(s). | `[]string` | `[]string{""}` |
+| GO_FIBER_VAULTS_DB_USER | PostgreSQL database user. | `string` | `""` |
+| GO_FIBER_VAULTS_DB_PASSWORD | PostgreSQL database password. | `string` | `""` |
+| GO_FIBER_VAULTS_DB_HOST | PostgreSQL database host. | `string` | `""` |
+| GO_FIBER_VAULTS_DB_PORT | PostgreSQL database port. | `string` | `""` |
+| GO_FIBER_VAULTS_DB_NAME | PostgreSQL database name. | `string` | `""` |
+| GO_FIBER_REDIS_PASSWORD | Redis cache password. | `string` | `""` |
+| GO_FIBER_SECRET_KEY | Secret key for various app-level encryption methods. | `string` | `""` |
+| GO_FIBER_SERVER_HOST | Fiber app will be run from this host. | `string` | `"localhost"` |
+| GO_FIBER_SERVER_PORT | Fiber app will be run from host using this port. | `string` | `"8080"` |
 
 ### Methods For Setting Environment Variables
 
@@ -126,29 +126,29 @@ services:
         # ...
 secrets:
     redis_password:
-        file: ./redis_password.txt
+        file: ./secret_files/redis_password.txt
     vaults_behind_proxy:
-        file: ./vaults_behind_proxy.txt
+        file: ./secret_files/vaults_behind_proxy.txt
     vaults_db_host:
-        file: ./vaults_db_host.txt
+        file: ./secret_files/vaults_db_host.txt
     vaults_db_name:
-        file: ./vaults_db_name.txt
+        file: ./secret_files/vaults_db_name.txt
     vaults_db_password:
-        file: ./vaults_db_password.txt
+        file: ./secret_files/vaults_db_password.txt
     vaults_db_port:
-        file: ./vaults_db_port.txt
+        file: ./secret_files/vaults_db_port.txt
     vaults_db_user:
-        file: ./vaults_db_user.txt
+        file: ./secret_files/vaults_db_user.txt
     vaults_environment:
-        file: ./vaults_environment.txt
+        file: ./secret_files/vaults_environment.txt
     vaults_secret_key:
-        file: ./vaults_secret_key.txt
+        file: ./secret_files/vaults_secret_key.txt
     vaults_server_host:
-        file: ./vaults_server_host.txt
+        file: ./secret_files/vaults_server_host.txt
     vaults_server_port:
-        file: ./vaults_server_port.txt
+        file: ./secret_files/vaults_server_port.txt
     vaults_proxy_ip_addresses:
-        file: ./vaults_proxy_ip_addresses.txt
+        file: ./secret_files/vaults_proxy_ip_addresses.txt
 ```
 
 ## Install Dependencies, Build, & Run

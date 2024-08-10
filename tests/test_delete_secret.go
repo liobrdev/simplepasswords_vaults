@@ -36,26 +36,21 @@ func testDeleteSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testDeleteSecretClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	slug string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, slug string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestDeleteSecret(t, app, slug)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.DeleteSecret,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 	})
 }
 
 func testDeleteSecretSuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 	_, _, _, secrets := setup.SetUpWithData(t, db)
-	secret := (*secrets)[0]
+	secret := secrets[0]
 
 	var secretCount int64
 	helpers.CountSecrets(t, db, &secretCount)

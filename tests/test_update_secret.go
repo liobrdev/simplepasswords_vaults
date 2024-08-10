@@ -68,13 +68,13 @@ func testUpdateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 		_, _, _, secrets := setup.SetUpWithData(t, db)
 
 		testUpdateSecretClientError(
-			t, app, db, (*secrets)[0].Slug, "null",
+			t, app, db, secrets[0].Slug, "null",
 			http.StatusBadRequest, utils.ErrorEmptyUpdateSecret,
 			"Likely (null|empty) (object|fields).",
 		)
 
 		testUpdateSecretClientError(
-			t, app, db, (*secrets)[0].Slug, "{}",
+			t, app, db, secrets[0].Slug, "{}",
 			http.StatusBadRequest, utils.ErrorEmptyUpdateSecret,
 			"Likely (null|empty) (object|fields).",
 		)
@@ -84,19 +84,19 @@ func testUpdateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 		_, _, _, secrets := setup.SetUpWithData(t, db)
 
 		testUpdateSecretClientError(
-			t, app, db, (*secrets)[0].Slug, `{"secret_label":"","secret_string":""}`,
+			t, app, db, secrets[0].Slug, `{"secret_label":"","secret_string":""}`,
 			http.StatusBadRequest, utils.ErrorEmptyUpdateSecret,
 			"Likely (null|empty) (object|fields).",
 		)
 
 		testUpdateSecretClientError(
-			t, app, db, (*secrets)[0].Slug, `{"secret_label":null,"secret_string":null}`,
+			t, app, db, secrets[0].Slug, `{"secret_label":null,"secret_string":null}`,
 			http.StatusBadRequest, utils.ErrorEmptyUpdateSecret,
 			"Likely (null|empty) (object|fields).",
 		)
 
 		testUpdateSecretClientError(
-			t, app, db, (*secrets)[0].Slug, `{"weird_label":"abc","weird_string":"123"}`,
+			t, app, db, secrets[0].Slug, `{"weird_label":"abc","weird_string":"123"}`,
 			http.StatusBadRequest, utils.ErrorEmptyUpdateSecret,
 			"Likely (null|empty) (object|fields).",
 		)
@@ -130,8 +130,8 @@ func testUpdateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 		_, _, _, secrets := setup.SetUpWithData(t, db)
 
 		testUpdateSecretClientError(
-			t, app, db, (*secrets)[0].Slug,
-			fmt.Sprintf(`{"secret_label":"%s"}`, (*secrets)[1].Label),
+			t, app, db, secrets[0].Slug,
+			fmt.Sprintf(`{"secret_label":"%s"}`, secrets[1].Label),
 			http.StatusConflict, utils.ErrorFailedDB,
 			"UNIQUE constraint failed: secrets.label, secrets.entry_slug",
 		)
@@ -147,7 +147,7 @@ func testUpdateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_204_no_content", func(t *testing.T) {
 		_, _, _, secrets := setup.SetUpWithData(t, db)
-		slug := (*secrets)[0].Slug
+		slug := secrets[0].Slug
 
 		updatedSecretLabel := "secret[_label='updated_label']@0.0.0.0"
 
@@ -176,7 +176,7 @@ func testUpdateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_irrelevant_data_204_no_content", func(t *testing.T) {
 		_, _, _, secrets := setup.SetUpWithData(t, db)
-		slug := (*secrets)[0].Slug
+		slug := secrets[0].Slug
 
 		updatedSecretLabel := "secret[_label='updated_label']@0.0.0.0"
 		updatedSecretString := "secret[_string='updated_string']@0.0.0.0"
@@ -191,29 +191,21 @@ func testUpdateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testUpdateSecretClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	slug string,
-	body string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, slug string, body string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestUpdateSecret(t, app, slug, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.UpdateSecret,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 		RequestBody:     body,
 	})
 }
 
 func testUpdateSecretSuccess(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
+	t *testing.T, app *fiber.App, db *gorm.DB,
 	slug, updatedSecretLabel, updatedSecretString, body string,
 ) {
 	var secretBeforeUpdate models.Secret
@@ -245,12 +237,7 @@ func testUpdateSecretSuccess(
 	require.True(t, secretAfterUpdate.UpdatedAt.After(secretBeforeUpdate.UpdatedAt))
 }
 
-func newRequestUpdateSecret(
-	t *testing.T,
-	app *fiber.App,
-	slug string,
-	body string,
-) *http.Response {
+func newRequestUpdateSecret(t *testing.T, app *fiber.App, slug, body string) *http.Response {
 	reqBody := strings.NewReader(body)
 	req := httptest.NewRequest(http.MethodPatch, "/api/secrets/"+slug, reqBody)
 	req.Header.Set("Content-Type", "application/json")

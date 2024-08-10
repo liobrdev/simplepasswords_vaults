@@ -38,19 +38,14 @@ func testRetrieveVault(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testRetrieveVaultClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	slug string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, slug string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestRetrieveVault(t, app, slug)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.RetrieveVault,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 	})
 }

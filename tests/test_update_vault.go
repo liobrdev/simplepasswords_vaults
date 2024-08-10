@@ -121,8 +121,8 @@ func testUpdateVault(t *testing.T, app *fiber.App, db *gorm.DB) {
 		_, vaults, _, _ := setup.SetUpWithData(t, db)
 
 		testUpdateVaultClientError(
-			t, app, db, (*vaults)[0].Slug,
-			fmt.Sprintf(`{"vault_title":"%s"}`, (*vaults)[1].Title),
+			t, app, db, vaults[0].Slug,
+			fmt.Sprintf(`{"vault_title":"%s"}`, vaults[1].Title),
 			http.StatusConflict, utils.ErrorFailedDB,
 			"UNIQUE constraint failed: vaults.title, vaults.user_slug",
 		)
@@ -151,14 +151,8 @@ func testUpdateVault(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testUpdateVaultClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	slug string,
-	body string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, slug string, body string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestUpdateVault(t, app, slug, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
@@ -171,11 +165,7 @@ func testUpdateVaultClientError(
 }
 
 func testUpdateVaultSuccess(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	updatedVaultTitle string,
-	body string,
+	t *testing.T, app *fiber.App, db *gorm.DB, updatedVaultTitle, body string,
 ) {
 	setup.SetUpWithData(t, db)
 	var vaultBeforeUpdate models.Vault
@@ -199,14 +189,9 @@ func testUpdateVaultSuccess(
 	require.True(t, vaultAfterUpdate.UpdatedAt.After(vaultBeforeUpdate.UpdatedAt))
 }
 
-func newRequestUpdateVault(
-	t *testing.T,
-	app *fiber.App,
-	slug string,
-	body string,
-) *http.Response {
+func newRequestUpdateVault(t *testing.T, app *fiber.App, slug, body string) *http.Response {
 	reqBody := strings.NewReader(body)
-	req := httptest.NewRequest(http.MethodPatch, "/api/vaults/"+slug, reqBody)
+	req := httptest.NewRequest(http.MethodPatch, "/api/vaults/" + slug, reqBody)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := app.Test(req)
 

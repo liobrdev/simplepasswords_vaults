@@ -323,8 +323,8 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_entry_title_already_exists_409_conflict", func(t *testing.T) {
 		users, vaults, _, _ := setup.SetUpWithData(t, db)
-		userSlug := (*users)[0].Slug
-		vaultSlug := (*vaults)[0].Slug
+		userSlug := users[0].Slug
+		vaultSlug := vaults[0].Slug
 		entryTitle := "entry@0.0.1.*"
 
 		secretsStr := `[{` +
@@ -371,7 +371,7 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_204_no_content", func(t *testing.T) {
 		users, _, _, _ := setup.SetUpWithData(t, db)
-		userSlug := (*users)[0].Slug
+		userSlug := users[0].Slug
 
 		var entryCount int64
 		helpers.CountEntries(t, db, &entryCount)
@@ -404,7 +404,7 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_irrelevant_data_204_no_content", func(t *testing.T) {
 		users, _, _, _ := setup.SetUpWithData(t, db)
-		userSlug := (*users)[0].Slug
+		userSlug := users[0].Slug
 
 		var entryCount int64
 		helpers.CountEntries(t, db, &entryCount)
@@ -441,19 +441,14 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testCreateEntryClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	body string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, body string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestCreateEntry(t, app, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.CreateEntry,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 		RequestBody:     body,
 	})

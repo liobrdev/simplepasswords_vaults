@@ -26,5 +26,5 @@ func main() {
 		log.Fatalln("Failed database auto-migrate:", err)
 	}
 
-	log.Fatal(app.Listen(conf.GO_FIBER_SERVER_HOST + ":" + conf.GO_FIBER_SERVER_PORT))
+	log.Fatal(app.Listen(conf.VAULTS_HOST + ":" + conf.VAULTS_PORT))
 }

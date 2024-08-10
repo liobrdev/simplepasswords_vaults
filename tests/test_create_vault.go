@@ -136,7 +136,7 @@ func testCreateVault(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_vault_title_already_exists_409_conflict", func(t *testing.T) {
 		users, _, _, _ := setup.SetUpWithData(t, db)
-		slug := (*users)[0].Slug
+		slug := users[0].Slug
 
 		testCreateVaultClientError(
 			t, app, db, fmt.Sprintf(`{"user_slug":"%s","vault_title":"vault@0.1.*.*"}`, slug),
@@ -147,7 +147,7 @@ func testCreateVault(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_204_no_content", func(t *testing.T) {
 		users, _, _, _ := setup.SetUpWithData(t, db)
-		userSlug := (*users)[0].Slug
+		userSlug := users[0].Slug
 		vaultTitle := "vault@0.2.*.*"
 
 		testCreateVaultSuccess(t, app, db, userSlug, vaultTitle, fmt.Sprintf(
@@ -159,7 +159,7 @@ func testCreateVault(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_irrelevant_data_204_no_content", func(t *testing.T) {
 		users, _, _, _ := setup.SetUpWithData(t, db)
-		userSlug := (*users)[0].Slug
+		userSlug := users[0].Slug
 		vaultTitle := "vault@0.2.*.*"
 
 		validBodyIrrelevantData := `{` +
@@ -173,29 +173,21 @@ func testCreateVault(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testCreateVaultClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	body string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, body string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestCreateVault(t, app, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.CreateVault,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 		RequestBody:     body,
 	})
 }
 
 func testCreateVaultSuccess(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	userSlug, vaultTitle, body string,
+	t *testing.T, app *fiber.App, db *gorm.DB, userSlug, vaultTitle, body string,
 ) {
 	var vaultCount int64
 	helpers.CountVaults(t, db, &vaultCount)

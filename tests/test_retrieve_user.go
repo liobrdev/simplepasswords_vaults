@@ -20,16 +20,12 @@ import (
 func testRetrieveUser(t *testing.T, app *fiber.App, db *gorm.DB) {
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
 		slug := "notEvenARealSlug"
-		testRetrieveUserClientError(
-			t, app, db, slug, http.StatusBadRequest, utils.ErrorUserSlug, slug,
-		)
+		testRetrieveUserClientError(t, app, 400, utils.ErrorUserSlug, slug, slug)
 	})
 
 	t.Run("valid_slug_404_not_found", func(t *testing.T) {
 		slug := helpers.NewSlug(t)
-		testRetrieveUserClientError(
-			t, app, db, slug, http.StatusNotFound, utils.ErrorNotFound, slug,
-		)
+		testRetrieveUserClientError(t, app, 404, utils.ErrorNotFound, slug, slug)
 	})
 
 	t.Run("valid_slug_200_ok", func(t *testing.T) {
@@ -38,28 +34,22 @@ func testRetrieveUser(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testRetrieveUserClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	slug string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, expectedStatus int, expectedMessage, expectedDetail, slug string,
 ) {
 	resp := newRequestRetrieveUser(t, app, slug)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.RetrieveUser,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 	})
 }
 
 func testRetrieveUserSuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 	users, _, _, _ := setup.SetUpWithData(t, db)
-	slug := (*users)[0].Slug
+	slug := users[0].Slug
 	resp := newRequestRetrieveUser(t, app, slug)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Equal(t, 200, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())

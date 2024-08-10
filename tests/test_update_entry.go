@@ -115,8 +115,8 @@ func testUpdateEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
 		_, _, entries, _ := setup.SetUpWithData(t, db)
 
 		testUpdateEntryClientError(
-			t, app, db, (*entries)[0].Slug,
-			fmt.Sprintf(`{"entry_title":"%s"}`, (*entries)[1].Title),
+			t, app, db, entries[0].Slug,
+			fmt.Sprintf(`{"entry_title":"%s"}`, entries[1].Title),
 			http.StatusConflict, utils.ErrorFailedDB,
 			"UNIQUE constraint failed: entries.title, entries.vault_slug",
 		)
@@ -153,31 +153,21 @@ func testUpdateEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testUpdateEntryClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	slug string,
-	body string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, slug string, body string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestUpdateEntry(t, app, slug, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.UpdateEntry,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 		RequestBody:     body,
 	})
 }
 
 func testUpdateEntrySuccess(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	updatedEntryTitle string,
-	body string,
+	t *testing.T, app *fiber.App, db *gorm.DB, updatedEntryTitle string, body string,
 ) {
 	setup.SetUpWithData(t, db)
 	var entryBeforeUpdate models.Entry
@@ -201,14 +191,9 @@ func testUpdateEntrySuccess(
 	require.True(t, entryAfterUpdate.UpdatedAt.After(entryBeforeUpdate.UpdatedAt))
 }
 
-func newRequestUpdateEntry(
-	t *testing.T,
-	app *fiber.App,
-	slug string,
-	body string,
-) *http.Response {
+func newRequestUpdateEntry(t *testing.T, app *fiber.App, slug, body string) *http.Response {
 	reqBody := strings.NewReader(body)
-	req := httptest.NewRequest(http.MethodPatch, "/api/entries/"+slug, reqBody)
+	req := httptest.NewRequest(http.MethodPatch, "/api/entries/" + slug, reqBody)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := app.Test(req)
 

@@ -6,77 +6,82 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"testing"
 
 	"github.com/spf13/viper"
 )
 
 type AppConfig struct {
-	GO_FIBER_ENVIRONMENT        string
-	GO_FIBER_BEHIND_PROXY       bool
-	GO_FIBER_PROXY_IP_ADDRESSES []string
-	GO_FIBER_VAULTS_DB_USER     string
-	GO_FIBER_VAULTS_DB_PASSWORD string
-	GO_FIBER_VAULTS_DB_HOST     string
-	GO_FIBER_VAULTS_DB_PORT     string
-	GO_FIBER_VAULTS_DB_NAME     string
-	GO_FIBER_REDIS_PASSWORD     string
-	GO_FIBER_SECRET_KEY         string
-	GO_FIBER_SERVER_HOST        string
-	GO_FIBER_SERVER_PORT        string
+	ENVIRONMENT             string
+	BEHIND_PROXY            bool
+	PROXY_IP_ADDRESSES      []string
+	VAULTS_DB_USER          string
+	VAULTS_DB_PASSWORD      string
+	VAULTS_DB_HOST          string
+	VAULTS_DB_PORT          string
+	VAULTS_DB_NAME          string
+	VAULTS_HOST							string
+	VAULTS_PORT							string
+	API_GATEWAY_HOST				string
+	API_GATEWAY_PORT				string
+	REDIS_PASSWORD          string
+	SECRET_KEY							string
+	GO_TESTING_CONTEXT			*testing.T
 }
 
 type envAbsPaths struct {
-	GO_FIBER_ENVIRONMENT        string
-	GO_FIBER_BEHIND_PROXY       string
-	GO_FIBER_PROXY_IP_ADDRESSES string
-	GO_FIBER_VAULTS_DB_USER     string
-	GO_FIBER_VAULTS_DB_PASSWORD string
-	GO_FIBER_VAULTS_DB_HOST     string
-	GO_FIBER_VAULTS_DB_PORT     string
-	GO_FIBER_VAULTS_DB_NAME     string
-	GO_FIBER_REDIS_PASSWORD     string
-	GO_FIBER_SECRET_KEY         string
-	GO_FIBER_SERVER_HOST        string
-	GO_FIBER_SERVER_PORT        string
+	ENVIRONMENT             string
+	BEHIND_PROXY            string
+	PROXY_IP_ADDRESSES     	string
+	VAULTS_DB_USER          string
+	VAULTS_DB_PASSWORD      string
+	VAULTS_DB_HOST          string
+	VAULTS_DB_PORT          string
+	VAULTS_DB_NAME          string
+	VAULTS_HOST							string
+	VAULTS_PORT							string
+	API_GATEWAY_HOST				string
+	API_GATEWAY_PORT				string
+	REDIS_PASSWORD          string
+	SECRET_KEY							string
 }
 
 func getDefaultConfigValue(fieldName string) string {
 	var defaultConfigValue string
 
-	if fieldName == "GO_FIBER_ENVIRONMENT" {
+	if fieldName == "ENVIRONMENT" {
 		defaultConfigValue = "development"
-	} else if fieldName == "GO_FIBER_SERVER_HOST" {
+	} else if fieldName == "API_GATEWAY_HOST" {
 		defaultConfigValue = "localhost"
-	} else if fieldName == "GO_FIBER_SERVER_PORT" {
+	} else if fieldName == "API_GATEWAY_PORT" {
+		defaultConfigValue = "5050"
+	} else if fieldName == "VAULTS_HOST" {
+		defaultConfigValue = "localhost"
+	} else if fieldName == "VAULTS_PORT" {
 		defaultConfigValue = "8080"
 	}
 
 	return defaultConfigValue
 }
 
-func scanFileFirstLineToConf(
-	file *os.File,
-	path string,
-	fieldName string,
-	conf *AppConfig,
-	confElem *reflect.Value,
-) {
+func scanFileFirstLineToConf(file *os.File, path string, fieldName string, conf *AppConfig,
+confElem *reflect.Value) {
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 
 	if contents := scanner.Text(); scanner.Err() != nil {
 		log.Fatalf(
-			"Error reading contents of '%s' from environment variable %s:\n%s",
-			path, fieldName, scanner.Err(),
+			"Error reading contents of '%s' from environment variable %s:\n%s", path, fieldName,
+			scanner.Err(),
 		)
-	} else if fieldName == "GO_FIBER_BEHIND_PROXY" {
+	} else if fieldName == "BEHIND_PROXY" {
 		if contents == "true" {
-			conf.GO_FIBER_BEHIND_PROXY = true
+			conf.BEHIND_PROXY = true
 		} else {
-			conf.GO_FIBER_BEHIND_PROXY = false
+			conf.BEHIND_PROXY = false
 		}
-	} else if fieldName == "GO_FIBER_PROXY_IP_ADDRESSES" {
-		conf.GO_FIBER_PROXY_IP_ADDRESSES = strings.Split(contents, ",")
+	} else if fieldName == "PROXY_IP_ADDRESSES" {
+		conf.PROXY_IP_ADDRESSES = strings.Split(contents, ",")
 	} else if contents == "" {
 		confElem.FieldByName(fieldName).SetString(getDefaultConfigValue(fieldName))
 	} else {
@@ -85,10 +90,7 @@ func scanFileFirstLineToConf(
 }
 
 func loadFileContentsFromPathsToConf(
-	conf *AppConfig,
-	pathsType *reflect.Type,
-	pathsValue *reflect.Value,
-	fieldCount int,
+	conf *AppConfig, pathsType *reflect.Type, pathsValue *reflect.Value, fieldCount int,
 ) {
 	confElem := reflect.ValueOf(conf).Elem()
 
@@ -115,7 +117,6 @@ func loadFileContentsFromPathsToConf(
 }
 
 func LoadConfigFromEnv(conf *AppConfig) (err error) {
-	viper.SetEnvPrefix("GO_FIBER")
 	viper.SetConfigFile("./.env")
 	viper.AutomaticEnv()
 

@@ -19,106 +19,94 @@ import (
 )
 
 func testCreateUser(t *testing.T, app *fiber.App, db *gorm.DB) {
+	bodyFmt := `{"user_slug":"%s"}`
+
 	t.Run("empty_body_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, db, "", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character '\x00' looking for beginning of value",
+			t, app, 400, utils.ErrorParse, "invalid character '\x00' looking for beginning of value", "",
 		)
 	})
 
 	t.Run("array_body_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, db, "[]", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character '[' looking for beginning of value",
+			t, app, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value", "[]",
 		)
 
 		testCreateUserClientError(
-			t, app, db, "[{}]", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character '[' looking for beginning of value",
+			t, app, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value", "[{}]",
 		)
 
 		testCreateUserClientError(
-			t, app, db, fmt.Sprintf(`[{"user_slug":"%s"}]`, helpers.NewSlug(t)),
-			http.StatusBadRequest, utils.ErrorParse,
-			"invalid character '[' looking for beginning of value",
-		)
-	})
-
-	t.Run("null_body_400_bad_request", func(t *testing.T) {
-		testCreateUserClientError(
-			t, app, db, "null", http.StatusBadRequest, utils.ErrorUserSlug, "",
+			t, app, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value",
+			fmt.Sprintf(`[{"user_slug":"%s"}]`, helpers.NewSlug(t)),
 		)
 	})
 
 	t.Run("boolean_body_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, db, "true", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character 't' looking for beginning of value",
+			t, app, 400, utils.ErrorParse, "invalid character 't' looking for beginning of value",
+			"true",
 		)
 
 		testCreateUserClientError(
-			t, app, db, "false", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character 'f' looking for beginning of value",
+			t, app, 400, utils.ErrorParse, "invalid character 'f' looking for beginning of value",
+			"false",
 		)
 	})
 
 	t.Run("string_body_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, db, "\"Valid JSON, but not an object.\"", http.StatusBadRequest,
-			utils.ErrorParse, "invalid character '\"' looking for beginning of value",
+			t, app, 400, utils.ErrorParse, "invalid character '\"' looking for beginning of value",
+			"\"Valid JSON, but not an object.\"",
 		)
 	})
 
+
+	t.Run("null_body_400_bad_request", func(t *testing.T) {
+		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, "", "null")
+	})
+
 	t.Run("empty_object_body_400_bad_request", func(t *testing.T) {
-		testCreateUserClientError(
-			t, app, db, "{}", http.StatusBadRequest, utils.ErrorUserSlug, "",
-		)
+		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, "", "{}")
 	})
 
 	t.Run("missing_user_slug_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, db, `{"userr_slug":"Spelled wrong!"}`, http.StatusBadRequest,
-			utils.ErrorUserSlug, "",
+			t, app, 400, utils.ErrorUserSlug, "", `{"userr_slug":"Spelled wrong!"}`,
 		)
 	})
 
 	t.Run("null_user_slug_400_bad_request", func(t *testing.T) {
-		testCreateUserClientError(
-			t, app, db, `{"user_slug":null}`, http.StatusBadRequest, utils.ErrorUserSlug, "",
-		)
+		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, "", `{"user_slug":null}`)
 	})
 
 	t.Run("empty_user_slug_400_bad_request", func(t *testing.T) {
-		testCreateUserClientError(
-			t, app, db, `{"user_slug":""}`, http.StatusBadRequest, utils.ErrorUserSlug, "",
-		)
+		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, "", `{"user_slug":""}`)
 	})
 
 	t.Run("too_long_user_slug_400_bad_request", func(t *testing.T) {
-		// `slug` is a random string greater than 32 characters in length
-		if slug, err := utils.GenerateSlug(33); err != nil {
-			t.Fatalf("Generate long string failed: %s", err.Error())
-		} else {
-			testCreateUserClientError(
-				t, app, db, fmt.Sprintf(`{"user_slug":"%s"}`, slug), http.StatusBadRequest,
-				utils.ErrorUserSlug, slug,
-			)
-		}
+		slug := helpers.NewSlug(t) + "aA1!"
+		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, slug, fmt.Sprintf(bodyFmt, slug))
+	})
+
+	t.Run("too_short_user_slug_400_bad_request", func(t *testing.T) {
+		slug := helpers.NewSlug(t)[:31]
+		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, slug, fmt.Sprintf(bodyFmt, slug))
 	})
 
 	t.Run("valid_body_user_slug_already_exists_409_conflict", func(t *testing.T) {
 		users, _, _, _ := setup.SetUpWithData(t, db)
-		slug := (*users)[0].Slug
+		slug := users[0].Slug
 
 		testCreateUserClientError(
-			t, app, db, fmt.Sprintf(`{"user_slug":"%s"}`, slug),
-			http.StatusConflict, utils.ErrorFailedDB, "UNIQUE constraint failed: users.slug",
+			t, app, 409, utils.ErrorDuplicateUser, "UNIQUE constraint failed: users.slug",
+			fmt.Sprintf(bodyFmt, slug),
 		)
 	})
 
 	t.Run("valid_body_204_no_content", func(t *testing.T) {
 		slug := helpers.NewSlug(t)
-		testCreateUserSuccess(t, app, db, slug, fmt.Sprintf(`{"user_slug":"%s"}`, slug))
+		testCreateUserSuccess(t, app, db, slug, fmt.Sprintf(bodyFmt, slug))
 	})
 
 	t.Run("valid_body_irrelevant_data_204_no_content", func(t *testing.T) {
@@ -135,34 +123,27 @@ func testCreateUser(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testCreateUserClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	body string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, expectedStatus int, expectedMessage, expectedDetail, body string,
 ) {
 	resp := newRequestCreateUser(t, app, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.CreateUser,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 		RequestBody:     body,
 	})
 }
 
-func testCreateUserSuccess(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	slug string,
-	body string,
-) {
+func testCreateUserSuccess(t *testing.T, app *fiber.App, db *gorm.DB, slug, body string) {
 	setup.SetUp(t, db)
+
+	var userCount int64
+	helpers.CountUsers(t, db, &userCount)
+	require.EqualValues(t, 0, userCount)
+
 	resp := newRequestCreateUser(t, app, body)
-	require.Equal(t, http.StatusNoContent, resp.StatusCode)
+	require.Equal(t, 204, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())
@@ -178,7 +159,6 @@ func testCreateUserSuccess(
 	require.Empty(t, user.Entries)
 	require.Empty(t, user.Secrets)
 
-	var userCount int64
 	helpers.CountUsers(t, db, &userCount)
 	require.EqualValues(t, 1, userCount)
 }
@@ -187,6 +167,7 @@ func newRequestCreateUser(t *testing.T, app *fiber.App, body string) *http.Respo
 	reqBody := strings.NewReader(body)
 	req := httptest.NewRequest(http.MethodPost, "/api/users", reqBody)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Client-Operation", utils.CreateUser)
 	resp, err := app.Test(req)
 
 	if err != nil {

@@ -9,14 +9,14 @@ import (
 )
 
 func populateTestDB(t *testing.T, db *gorm.DB) (
-	*[]models.User,
-	*[]models.Vault,
-	*[]models.Entry,
-	*[]models.Secret,
+	users []models.User,
+	vaults []models.Vault,
+	entries []models.Entry,
+	secrets []models.Secret,
 ) {
-	users := createTestUsers(t, db)
-	vaults := createTestVaults(&users, t, db)
-	entries := createTestEntries(&users, &vaults, t, db)
-	secrets := createTestSecrets(&users, &vaults, &entries, t, db)
-	return &users, &vaults, &entries, &secrets
+	users = createTestUsers(t, db)
+	vaults = createTestVaults(&users, t, db)
+	entries = createTestEntries(&users, &vaults, t, db)
+	secrets = createTestSecrets(&users, &vaults, &entries, t, db)
+	return users, vaults, entries, secrets
 }

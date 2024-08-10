@@ -1,6 +1,6 @@
 module github.com/liobrdev/simplepasswords_vaults
 
-go 1.19
+go 1.22
 
 require (
 	github.com/goccy/go-json v0.9.11

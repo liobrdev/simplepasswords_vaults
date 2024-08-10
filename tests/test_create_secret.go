@@ -308,13 +308,13 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_secret_label_already_exists_409_conflict", func(t *testing.T) {
 		users, vaults, entries, secrets := setup.SetUpWithData(t, db)
-		userSlug := (*users)[0].Slug
-		vaultSlug := (*vaults)[1].Slug
-		entrySlug := (*entries)[3].Slug
+		userSlug := users[0].Slug
+		vaultSlug := vaults[1].Slug
+		entrySlug := entries[3].Slug
 
 		testCreateSecretClientError(
 			t, app, db,
-			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, (*secrets)[7].Label, "123"),
+			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, secrets[7].Label, "123"),
 			http.StatusConflict, utils.ErrorFailedDB,
 			"UNIQUE constraint failed: secrets.label, secrets.entry_slug",
 		)
@@ -322,9 +322,9 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_204_no_content", func(t *testing.T) {
 		users, vaults, entries, _ := setup.SetUpWithData(t, db)
-		userSlug := (*users)[0].Slug
-		vaultSlug := (*vaults)[1].Slug
-		entrySlug := (*entries)[3].Slug
+		userSlug := users[0].Slug
+		vaultSlug := vaults[1].Slug
+		entrySlug := entries[3].Slug
 		secretLabel := "secret[_label='email']@0.1.1.2"
 		secretString := "secret[_string='food.eater@email.dev']@0.1.1.2"
 
@@ -336,9 +336,9 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 
 	t.Run("valid_body_irrelevant_data_204_no_content", func(t *testing.T) {
 		users, vaults, entries, _ := setup.SetUpWithData(t, db)
-		userSlug := (*users)[0].Slug
-		vaultSlug := (*vaults)[1].Slug
-		entrySlug := (*entries)[3].Slug
+		userSlug := users[0].Slug
+		vaultSlug := vaults[1].Slug
+		entrySlug := entries[3].Slug
 		secretLabel := "secret[_label='email']@0.1.1.2"
 		secretString := "secret[_string='food.eater@email.dev']@0.1.1.2"
 
@@ -363,28 +363,21 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testCreateSecretClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	body string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, body string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestCreateSecret(t, app, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.CreateSecret,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 		RequestBody:     body,
 	})
 }
 
 func testCreateSecretSuccess(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
+	t *testing.T, app *fiber.App, db *gorm.DB,
 	userSlug, vaultSlug, entrySlug, secretLabel, secretString, body string,
 ) {
 	var secretCount int64

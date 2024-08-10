@@ -37,19 +37,14 @@ func testDeleteEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func testDeleteEntryClientError(
-	t *testing.T,
-	app *fiber.App,
-	db *gorm.DB,
-	slug string,
-	expectedStatus int,
-	expectedMessage utils.ErrorMessage,
-	expectedDetail string,
+	t *testing.T, app *fiber.App, db *gorm.DB, slug string, expectedStatus int,
+	expectedMessage string, expectedDetail string,
 ) {
 	resp := newRequestDeleteEntry(t, app, slug)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.DeleteEntry,
-		Message:         string(expectedMessage),
+		Message:         expectedMessage,
 		Detail:          expectedDetail,
 	})
 }
@@ -110,11 +105,7 @@ func testDeleteEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 	require.EqualValues(t, 14, secretCount)
 }
 
-func newRequestDeleteEntry(
-	t *testing.T,
-	app *fiber.App,
-	slug string,
-) *http.Response {
+func newRequestDeleteEntry(t *testing.T, app *fiber.App, slug string) *http.Response {
 	req := httptest.NewRequest(http.MethodDelete, "/api/entries/"+slug, nil)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := app.Test(req)

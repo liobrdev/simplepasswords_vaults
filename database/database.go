@@ -18,16 +18,16 @@ func Init(conf *config.AppConfig) *gorm.DB {
 		PrepareStmt:            true,
 	}
 
-	if conf.GO_FIBER_ENVIRONMENT != "production" {
+	if conf.ENVIRONMENT != "production" {
 		db = openDbSession("sqlite", "./test_db/vaults.sqlite", &gormConfig)
 	} else {
 		db = openDbSession("postgres", fmt.Sprintf(
 			"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable TimeZone=UTC",
-			conf.GO_FIBER_VAULTS_DB_USER,
-			conf.GO_FIBER_VAULTS_DB_PASSWORD,
-			conf.GO_FIBER_VAULTS_DB_HOST,
-			conf.GO_FIBER_VAULTS_DB_PORT,
-			conf.GO_FIBER_VAULTS_DB_NAME,
+			conf.VAULTS_DB_USER,
+			conf.VAULTS_DB_PASSWORD,
+			conf.VAULTS_DB_HOST,
+			conf.VAULTS_DB_PORT,
+			conf.VAULTS_DB_NAME,
 		), &gormConfig)
 	}
 

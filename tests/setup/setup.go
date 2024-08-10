@@ -22,10 +22,10 @@ func SetUp(t *testing.T, db *gorm.DB) {
 }
 
 func SetUpWithData(t *testing.T, db *gorm.DB) (
-	*[]models.User,
-	*[]models.Vault,
-	*[]models.Entry,
-	*[]models.Secret,
+	users []models.User,
+	vaults []models.Vault,
+	entries []models.Entry,
+	secrets []models.Secret,
 ) {
 	SetUp(t, db)
 	return populateTestDB(t, db)

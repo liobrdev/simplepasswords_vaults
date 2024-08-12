@@ -24,7 +24,7 @@ func Register(app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 
 	vaultsApi := api.Group("/vaults")
 	vaultsApi.Post("/", H.CreateVault)
-	// vaultsApi.Get("/:slug", H.RetrieveVault)
+	vaultsApi.Get("/:slug", H.RetrieveVault)
 	// vaultsApi.Patch("/:slug", H.UpdateVault)
 	// vaultsApi.Delete("/:slug", H.DeleteVault)
 }

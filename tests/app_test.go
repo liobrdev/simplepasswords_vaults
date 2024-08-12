@@ -49,9 +49,9 @@ func runTests(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig)
 		testCreateVault(t, app, db, conf)
 	})
 
-	// t.Run("test_retrieve_vault", func(t *testing.T) {
-	// 	testRetrieveVault(t, app, db)
-	// })
+	t.Run("test_retrieve_vault", func(t *testing.T) {
+		testRetrieveVault(t, app, db, conf)
+	})
 
 	// t.Run("test_update_vault", func(t *testing.T) {
 	// 	testUpdateVault(t, app, db)

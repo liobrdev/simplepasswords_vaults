@@ -34,5 +34,9 @@ func (H Handler) RetrieveUser(c *fiber.Ctx) error {
 		)
 	}
 
+	if len(user.Vaults) == 0 {
+		user.Vaults = []models.Vault{}
+	}
+
 	return c.Status(200).JSON(&user)
 }

@@ -12,86 +12,94 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/liobrdev/simplepasswords_vaults/config"
 	"github.com/liobrdev/simplepasswords_vaults/models"
 	"github.com/liobrdev/simplepasswords_vaults/tests/helpers"
 	"github.com/liobrdev/simplepasswords_vaults/tests/setup"
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func testCreateUser(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testCreateUser(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	bodyFmt := `{"user_slug":"%s"}`
 
 	t.Run("empty_body_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, 400, utils.ErrorParse, "invalid character '\x00' looking for beginning of value", "",
+			t, app, conf, 400, utils.ErrorParse,
+			"invalid character '\x00' looking for beginning of value", "",
 		)
 	})
 
 	t.Run("array_body_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value", "[]",
+			t, app, conf, 400, utils.ErrorParse,
+			"invalid character '[' looking for beginning of value", "[]",
 		)
 
 		testCreateUserClientError(
-			t, app, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value", "[{}]",
+			t, app, conf, 400, utils.ErrorParse,
+			"invalid character '[' looking for beginning of value", "[{}]",
 		)
 
 		testCreateUserClientError(
-			t, app, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value",
 			fmt.Sprintf(`[{"user_slug":"%s"}]`, helpers.NewSlug(t)),
 		)
 	})
 
 	t.Run("boolean_body_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, 400, utils.ErrorParse, "invalid character 't' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, "invalid character 't' looking for beginning of value",
 			"true",
 		)
 
 		testCreateUserClientError(
-			t, app, 400, utils.ErrorParse, "invalid character 'f' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, "invalid character 'f' looking for beginning of value",
 			"false",
 		)
 	})
 
 	t.Run("string_body_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, 400, utils.ErrorParse, "invalid character '\"' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, "invalid character '\"' looking for beginning of value",
 			"\"Valid JSON, but not an object.\"",
 		)
 	})
 
 
 	t.Run("null_body_400_bad_request", func(t *testing.T) {
-		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, "", "null")
+		testCreateUserClientError(t, app, conf, 400, utils.ErrorUserSlug, "", "null")
 	})
 
 	t.Run("empty_object_body_400_bad_request", func(t *testing.T) {
-		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, "", "{}")
+		testCreateUserClientError(t, app, conf, 400, utils.ErrorUserSlug, "", "{}")
 	})
 
 	t.Run("missing_user_slug_400_bad_request", func(t *testing.T) {
 		testCreateUserClientError(
-			t, app, 400, utils.ErrorUserSlug, "", `{"userr_slug":"Spelled wrong!"}`,
+			t, app, conf, 400, utils.ErrorUserSlug, "", `{"userr_slug":"Spelled wrong!"}`,
 		)
 	})
 
 	t.Run("null_user_slug_400_bad_request", func(t *testing.T) {
-		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, "", `{"user_slug":null}`)
+		testCreateUserClientError(t, app, conf, 400, utils.ErrorUserSlug, "", `{"user_slug":null}`)
 	})
 
 	t.Run("empty_user_slug_400_bad_request", func(t *testing.T) {
-		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, "", `{"user_slug":""}`)
+		testCreateUserClientError(t, app, conf, 400, utils.ErrorUserSlug, "", `{"user_slug":""}`)
 	})
 
 	t.Run("too_long_user_slug_400_bad_request", func(t *testing.T) {
 		slug := helpers.NewSlug(t) + "aA1!"
-		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, slug, fmt.Sprintf(bodyFmt, slug))
+		testCreateUserClientError(
+			t, app, conf, 400, utils.ErrorUserSlug, slug, fmt.Sprintf(bodyFmt, slug),
+		)
 	})
 
 	t.Run("too_short_user_slug_400_bad_request", func(t *testing.T) {
 		slug := helpers.NewSlug(t)[:31]
-		testCreateUserClientError(t, app, 400, utils.ErrorUserSlug, slug, fmt.Sprintf(bodyFmt, slug))
+		testCreateUserClientError(
+			t, app, conf, 400, utils.ErrorUserSlug, slug, fmt.Sprintf(bodyFmt, slug),
+		)
 	})
 
 	t.Run("valid_body_user_slug_already_exists_409_conflict", func(t *testing.T) {
@@ -99,14 +107,14 @@ func testCreateUser(t *testing.T, app *fiber.App, db *gorm.DB) {
 		slug := users[0].Slug
 
 		testCreateUserClientError(
-			t, app, 409, utils.ErrorDuplicateUser, "UNIQUE constraint failed: users.slug",
+			t, app, conf, 409, utils.ErrorDuplicateUser, "UNIQUE constraint failed: users.slug",
 			fmt.Sprintf(bodyFmt, slug),
 		)
 	})
 
 	t.Run("valid_body_204_no_content", func(t *testing.T) {
 		slug := helpers.NewSlug(t)
-		testCreateUserSuccess(t, app, db, slug, fmt.Sprintf(bodyFmt, slug))
+		testCreateUserSuccess(t, app, db, conf, slug, fmt.Sprintf(bodyFmt, slug))
 	})
 
 	t.Run("valid_body_irrelevant_data_204_no_content", func(t *testing.T) {
@@ -118,14 +126,15 @@ func testCreateUser(t *testing.T, app *fiber.App, db *gorm.DB) {
 			`"user_created_at":"10/12/22"` +
 			`}`
 
-		testCreateUserSuccess(t, app, db, slug, validBodyIrrelevantData)
+		testCreateUserSuccess(t, app, db, conf, slug, validBodyIrrelevantData)
 	})
 }
 
 func testCreateUserClientError(
-	t *testing.T, app *fiber.App, expectedStatus int, expectedMessage, expectedDetail, body string,
+	t *testing.T, app *fiber.App, conf *config.AppConfig, expectedStatus int,
+	expectedMessage, expectedDetail, body string,
 ) {
-	resp := newRequestCreateUser(t, app, body)
+	resp := newRequestCreateUser(t, app, conf, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.CreateUser,
@@ -135,14 +144,16 @@ func testCreateUserClientError(
 	})
 }
 
-func testCreateUserSuccess(t *testing.T, app *fiber.App, db *gorm.DB, slug, body string) {
+func testCreateUserSuccess(
+	t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig, slug, body string,
+) {
 	setup.SetUp(t, db)
 
 	var userCount int64
 	helpers.CountUsers(t, db, &userCount)
 	require.EqualValues(t, 0, userCount)
 
-	resp := newRequestCreateUser(t, app, body)
+	resp := newRequestCreateUser(t, app, conf, body)
 	require.Equal(t, 204, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
@@ -163,11 +174,16 @@ func testCreateUserSuccess(t *testing.T, app *fiber.App, db *gorm.DB, slug, body
 	require.EqualValues(t, 1, userCount)
 }
 
-func newRequestCreateUser(t *testing.T, app *fiber.App, body string) *http.Response {
+func newRequestCreateUser(
+	t *testing.T, app *fiber.App, conf *config.AppConfig, body string,
+) *http.Response {
+
 	reqBody := strings.NewReader(body)
 	req := httptest.NewRequest(http.MethodPost, "/api/users", reqBody)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Client-Operation", utils.CreateUser)
+	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+
 	resp, err := app.Test(req)
 
 	if err != nil {

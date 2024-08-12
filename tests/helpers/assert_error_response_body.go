@@ -11,11 +11,7 @@ import (
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func AssertErrorResponseBody(
-	t *testing.T,
-	resp *http.Response,
-	expected utils.ErrorResponseBody,
-) {
+func AssertErrorResponseBody(t *testing.T, resp *http.Response, expected utils.ErrorResponseBody) {
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())
 	} else {

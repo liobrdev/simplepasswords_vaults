@@ -15,7 +15,9 @@ const (
 	ErrorItemSecrets       string = "Invalid item in `secrets`."
 	ErrorDuplicateSecrets  string = "Duplicate `entry.secrets.secret_label`."
 	ErrorDuplicateUser		 string = "User already exists."
+	ErrorDuplicateVault		 string = "Vault already exists."
 	ErrorFailedDB          string = "Failed DB operation."
 	ErrorNotFound          string = "Record not found."
 	ErrorNoRowsAffected    string = "result.RowsAffected == 0"
+	ErrorToken						 string = "Invalid token."
 )

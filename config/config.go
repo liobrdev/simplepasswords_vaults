@@ -15,6 +15,7 @@ type AppConfig struct {
 	ENVIRONMENT             string
 	BEHIND_PROXY            bool
 	PROXY_IP_ADDRESSES      []string
+	VAULTS_ACCESS_TOKEN			string
 	VAULTS_DB_USER          string
 	VAULTS_DB_PASSWORD      string
 	VAULTS_DB_HOST          string
@@ -33,6 +34,7 @@ type envAbsPaths struct {
 	ENVIRONMENT             string
 	BEHIND_PROXY            string
 	PROXY_IP_ADDRESSES     	string
+	VAULTS_ACCESS_TOKEN			string
 	VAULTS_DB_USER          string
 	VAULTS_DB_PASSWORD      string
 	VAULTS_DB_HOST          string

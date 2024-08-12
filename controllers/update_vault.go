@@ -1,4 +1,4 @@
-package vaults
+package controllers
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type UpdateVaultRequestBody struct {
 	Title string `json:"vault_title"`
 }
 
-func (h handler) UpdateVault(c *fiber.Ctx) error {
+func (H Handler) UpdateVault(c *fiber.Ctx) error {
 	body := UpdateVaultRequestBody{}
 
 	if err := c.BodyParser(&body); err != nil {
@@ -49,7 +49,7 @@ func (h handler) UpdateVault(c *fiber.Ctx) error {
 
 	slug := c.Params("slug")
 
-	if result := h.DB.Model(&models.Vault{}).Where("slug = ?", slug).Update(
+	if result := H.DB.Model(&models.Vault{}).Where("slug = ?", slug).Update(
 		"title",
 		body.Title,
 	); result.Error != nil {

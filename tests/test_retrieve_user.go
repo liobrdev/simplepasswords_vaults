@@ -11,32 +11,34 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/liobrdev/simplepasswords_vaults/config"
 	"github.com/liobrdev/simplepasswords_vaults/models"
 	"github.com/liobrdev/simplepasswords_vaults/tests/helpers"
 	"github.com/liobrdev/simplepasswords_vaults/tests/setup"
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func testRetrieveUser(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testRetrieveUser(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
 		slug := "notEvenARealSlug"
-		testRetrieveUserClientError(t, app, 400, utils.ErrorUserSlug, slug, slug)
+		testRetrieveUserClientError(t, app, conf, 400, utils.ErrorUserSlug, slug, slug)
 	})
 
 	t.Run("valid_slug_404_not_found", func(t *testing.T) {
 		slug := helpers.NewSlug(t)
-		testRetrieveUserClientError(t, app, 404, utils.ErrorNotFound, slug, slug)
+		testRetrieveUserClientError(t, app, conf, 404, utils.ErrorNotFound, slug, slug)
 	})
 
 	t.Run("valid_slug_200_ok", func(t *testing.T) {
-		testRetrieveUserSuccess(t, app, db)
+		testRetrieveUserSuccess(t, app, db, conf)
 	})
 }
 
 func testRetrieveUserClientError(
-	t *testing.T, app *fiber.App, expectedStatus int, expectedMessage, expectedDetail, slug string,
+	t *testing.T, app *fiber.App, conf *config.AppConfig, expectedStatus int,
+	expectedMessage, expectedDetail, slug string,
 ) {
-	resp := newRequestRetrieveUser(t, app, slug)
+	resp := newRequestRetrieveUser(t, app, conf, slug)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.RetrieveUser,
@@ -45,10 +47,10 @@ func testRetrieveUserClientError(
 	})
 }
 
-func testRetrieveUserSuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testRetrieveUserSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	users, _, _, _ := setup.SetUpWithData(t, db)
 	slug := users[0].Slug
-	resp := newRequestRetrieveUser(t, app, slug)
+	resp := newRequestRetrieveUser(t, app, conf, slug)
 	require.Equal(t, 200, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
@@ -65,9 +67,15 @@ func testRetrieveUserSuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 	}
 }
 
-func newRequestRetrieveUser(t *testing.T, app *fiber.App, slug string) *http.Response {
-	req := httptest.NewRequest(http.MethodGet, "/api/users/"+slug, nil)
+func newRequestRetrieveUser(
+	t *testing.T, app *fiber.App, conf *config.AppConfig, slug string,
+) *http.Response {
+
+	req := httptest.NewRequest(http.MethodGet, "/api/users/" + slug, nil)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Client-Operation", utils.RetrieveUser)
+	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+
 	resp, err := app.Test(req)
 
 	if err != nil {

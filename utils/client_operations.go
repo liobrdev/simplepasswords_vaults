@@ -14,4 +14,5 @@ const (
 	DeleteVault   string = "delete_vault"
 	DeleteEntry   string = "delete_entry"
 	DeleteSecret  string = "delete_secret"
+	TestAuthReq		string = "test_auth_req"
 )

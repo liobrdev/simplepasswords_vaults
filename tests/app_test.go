@@ -33,17 +33,21 @@ func TestApp(t *testing.T) {
 }
 
 func runTests(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
+	t.Run("test_authorize_request", func(t *testing.T) {
+		testAuthorizeRequest(t, app, conf)
+	})
+
 	t.Run("test_create_user", func(t *testing.T) {
-		testCreateUser(t, app, db)
+		testCreateUser(t, app, db, conf)
 	})
 
 	t.Run("test_retrieve_user", func(t *testing.T) {
-		testRetrieveUser(t, app, db)
+		testRetrieveUser(t, app, db, conf)
 	})
 
-	// t.Run("test_create_vault", func(t *testing.T) {
-	// 	testCreateVault(t, app, db)
-	// })
+	t.Run("test_create_vault", func(t *testing.T) {
+		testCreateVault(t, app, db, conf)
+	})
 
 	// t.Run("test_retrieve_vault", func(t *testing.T) {
 	// 	testRetrieveVault(t, app, db)

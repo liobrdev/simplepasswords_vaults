@@ -10,37 +10,36 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/liobrdev/simplepasswords_vaults/config"
 	"github.com/liobrdev/simplepasswords_vaults/models"
 	"github.com/liobrdev/simplepasswords_vaults/tests/helpers"
 	"github.com/liobrdev/simplepasswords_vaults/tests/setup"
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func testDeleteVault(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testDeleteVault(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	t.Run("valid_slug_404_not_found", func(t *testing.T) {
 		testDeleteVaultClientError(
-			t, app, db, helpers.NewSlug(t), http.StatusNotFound, utils.ErrorNoRowsAffected,
-			"Likely that slug was not found.",
+			t, app, conf, 404, utils.ErrorNoRowsAffected, "Likely that slug was not found.",
+			helpers.NewSlug(t),
 		)
 	})
 
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
 		slug := "notEvenARealSlug"
-		testDeleteVaultClientError(
-			t, app, db, slug, http.StatusBadRequest, utils.ErrorVaultSlug, slug,
-		)
+		testDeleteVaultClientError(t, app, conf, 400, utils.ErrorVaultSlug, slug, slug)
 	})
 
 	t.Run("valid_slug_204_no_content", func(t *testing.T) {
-		testDeleteVaultSuccess(t, app, db)
+		testDeleteVaultSuccess(t, app, db, conf)
 	})
 }
 
 func testDeleteVaultClientError(
-	t *testing.T, app *fiber.App, db *gorm.DB, slug string, expectedStatus int,
-	expectedMessage string, expectedDetail string,
+	t *testing.T, app *fiber.App, conf *config.AppConfig,
+	expectedStatus int, expectedMessage, expectedDetail, slug string,
 ) {
-	resp := newRequestDeleteVault(t, app, slug)
+	resp := newRequestDeleteVault(t, app, conf, slug)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.DeleteVault,
@@ -49,7 +48,7 @@ func testDeleteVaultClientError(
 	})
 }
 
-func testDeleteVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testDeleteVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	setup.SetUpWithData(t, db)
 
 	var vault models.Vault
@@ -90,8 +89,8 @@ func testDeleteVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 	helpers.CountSecrets(t, db, &secretCount)
 	require.EqualValues(t, 16, secretCount)
 
-	resp := newRequestDeleteVault(t, app, vault.Slug)
-	require.Equal(t, http.StatusNoContent, resp.StatusCode)
+	resp := newRequestDeleteVault(t, app, conf, vault.Slug)
+	require.Equal(t, 204, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())
@@ -152,12 +151,13 @@ func testDeleteVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 }
 
 func newRequestDeleteVault(
-	t *testing.T,
-	app *fiber.App,
-	slug string,
+	t *testing.T, app *fiber.App, conf *config.AppConfig, slug string,
 ) *http.Response {
-	req := httptest.NewRequest(http.MethodDelete, "/api/vaults/"+slug, nil)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/vaults/" + slug, nil)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Client-Operation", utils.DeleteVault)
+	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
 	resp, err := app.Test(req)
 
 	if err != nil {

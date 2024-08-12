@@ -15,13 +15,7 @@ func (H Handler) DeleteVault(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	if !utils.SlugRegexp.MatchString(slug) {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.DeleteVault,
-			string(utils.ErrorVaultSlug),
-			slug,
-		)
+		return utils.RespondWithError(c, 400, utils.DeleteVault, utils.ErrorVaultSlug, slug)
 	}
 
 	var vault models.Vault
@@ -31,7 +25,7 @@ func (H Handler) DeleteVault(c *fiber.Ctx) error {
 		if result = tx.Delete(&vault, "slug = ?", slug); result.Error != nil {
 			return result.Error
 		} else if n := result.RowsAffected; n == 0 {
-			return errors.New(string(utils.ErrorNoRowsAffected))
+			return errors.New(utils.ErrorNoRowsAffected)
 		} else if n > 1 {
 			return fmt.Errorf("result.RowsAffected (%d) > 1", n)
 		}
@@ -46,32 +40,16 @@ func (H Handler) DeleteVault(c *fiber.Ctx) error {
 
 		return nil
 	}); err != nil {
-		if errText := err.Error(); errText == string(utils.ErrorNoRowsAffected) {
+		if errText := err.Error(); errText == utils.ErrorNoRowsAffected {
 			return utils.RespondWithError(
-				c,
-				fiber.StatusNotFound,
-				utils.DeleteVault,
-				errText,
-				"Likely that slug was not found.",
+				c, 404, utils.DeleteVault, errText, "Likely that slug was not found.",
 			)
 		} else if utils.RowsRegexp.MatchString(errText) {
-			return utils.RespondWithError(
-				c,
-				fiber.StatusConflict,
-				utils.DeleteVault,
-				errText,
-				"",
-			)
+			return utils.RespondWithError(c, 500, utils.DeleteVault, errText, "")
 		}
 
-		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.DeleteVault,
-			string(utils.ErrorFailedDB),
-			err.Error(),
-		)
+		return utils.RespondWithError(c, 500, utils.DeleteVault, utils.ErrorFailedDB, err.Error())
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(204)
 }

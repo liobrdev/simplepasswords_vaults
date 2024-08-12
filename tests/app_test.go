@@ -57,9 +57,9 @@ func runTests(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig)
 		testUpdateVault(t, app, db, conf)
 	})
 
-	// t.Run("test_delete_vault", func(t *testing.T) {
-	// 	testDeleteVault(t, app, db)
-	// })
+	t.Run("test_delete_vault", func(t *testing.T) {
+		testDeleteVault(t, app, db, conf)
+	})
 
 	// t.Run("test_create_entry", func(t *testing.T) {
 	// 	testCreateEntry(t, app, db)

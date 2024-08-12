@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,65 +17,33 @@ func (H Handler) UpdateVault(c *fiber.Ctx) error {
 	body := UpdateVaultRequestBody{}
 
 	if err := c.BodyParser(&body); err != nil {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.UpdateVault,
-			string(utils.ErrorParse),
-			err.Error(),
-		)
+		return utils.RespondWithError(c, 400, utils.UpdateVault, utils.ErrorParse, err.Error())
 	}
 
 	if body.Title == "" {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.UpdateVault,
-			string(utils.ErrorVaultTitle),
-			"",
-		)
+		return utils.RespondWithError(c, 400, utils.UpdateVault, utils.ErrorVaultTitle, "")
 	}
 
 	if len(body.Title) > 255 {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.UpdateVault,
-			string(utils.ErrorVaultTitle),
-			fmt.Sprintf("Too long (%d > 255)", len(body.Title)),
-		)
+		return utils.RespondWithError(c, 400, utils.UpdateVault, utils.ErrorVaultTitle, "Too long")
 	}
 
 	slug := c.Params("slug")
 
-	if result := H.DB.Model(&models.Vault{}).Where("slug = ?", slug).Update(
-		"title",
-		body.Title,
-	); result.Error != nil {
+	if result := H.DB.Model(&models.Vault{}).Where("slug = ?", slug).Update("title", body.Title);
+	result.Error != nil {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.UpdateVault,
-			string(utils.ErrorFailedDB),
-			result.Error.Error(),
+			c, 500, utils.UpdateVault, utils.ErrorFailedDB, result.Error.Error(),
 		)
 	} else if n := result.RowsAffected; n == 0 {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusNotFound,
-			utils.UpdateVault,
-			string(utils.ErrorNoRowsAffected),
-			"Likely that slug was not found.",
+			c, 404, utils.UpdateVault, utils.ErrorNoRowsAffected, "Likely that slug was not found.",
 		)
 	} else if n > 1 {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.UpdateVault,
-			"result.RowsAffected > 1",
-			strconv.FormatInt(n, 10),
+			c, 500, utils.UpdateVault, "result.RowsAffected > 1", strconv.FormatInt(n, 10),
 		)
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(204)
 }

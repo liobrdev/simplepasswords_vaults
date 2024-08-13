@@ -68,9 +68,9 @@ func runTests(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig)
 		testDeleteEntry(t, app, db, conf)
 	})
 
-	// t.Run("test_create_secret", func(t *testing.T) {
-	// 	testCreateSecret(t, app, db)
-	// })
+	t.Run("test_create_secret", func(t *testing.T) {
+		testCreateSecret(t, app, db, conf)
+	})
 
 	// t.Run("test_update_secret", func(t *testing.T) {
 	// 	testUpdateSecret(t, app, db)

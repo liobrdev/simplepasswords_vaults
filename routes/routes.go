@@ -33,4 +33,9 @@ func Register(app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	entriesApi.Get("/:slug", H.RetrieveEntry)
 	entriesApi.Patch("/:slug", H.UpdateEntry)
 	entriesApi.Delete("/:slug", H.DeleteEntry)
+
+	secretsApi := api.Group("/secrets")
+	secretsApi.Post("/", H.CreateSecret)
+	// secretsApi.Patch("/:slug", H.UpdateSecret)
+	// secretsApi.Delete("/:slug", H.DeleteSecret)
 }

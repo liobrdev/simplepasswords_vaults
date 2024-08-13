@@ -1,4 +1,4 @@
-package secrets
+package controllers
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ type UpdateSecretRequestBody struct {
 	String string `json:"secret_string"`
 }
 
-func (h handler) UpdateSecret(c *fiber.Ctx) error {
+func (H Handler) UpdateSecret(c *fiber.Ctx) error {
 	body := UpdateSecretRequestBody{}
 
 	if err := c.BodyParser(&body); err != nil {
@@ -62,7 +62,7 @@ func (h handler) UpdateSecret(c *fiber.Ctx) error {
 
 	slug := c.Params("slug")
 
-	if result := h.DB.Model(&models.Secret{}).Where("slug = ?", slug).Updates(
+	if result := H.DB.Model(&models.Secret{}).Where("slug = ?", slug).Updates(
 		models.Secret{Label: body.Label, String: body.String},
 	); result.Error != nil {
 		return utils.RespondWithError(

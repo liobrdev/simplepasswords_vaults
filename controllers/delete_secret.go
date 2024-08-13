@@ -1,4 +1,4 @@
-package secrets
+package controllers
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func (h handler) DeleteSecret(c *fiber.Ctx) error {
+func (H Handler) DeleteSecret(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	if !utils.SlugRegexp.MatchString(slug) {
@@ -24,7 +24,7 @@ func (h handler) DeleteSecret(c *fiber.Ctx) error {
 
 	var secret models.Secret
 
-	if result := h.DB.Delete(&secret, "slug = ?", slug); result.Error != nil {
+	if result := H.DB.Delete(&secret, "slug = ?", slug); result.Error != nil {
 		return utils.RespondWithError(
 			c,
 			fiber.StatusConflict,

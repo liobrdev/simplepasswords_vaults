@@ -12,13 +12,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/liobrdev/simplepasswords_vaults/config"
 	"github.com/liobrdev/simplepasswords_vaults/models"
 	"github.com/liobrdev/simplepasswords_vaults/tests/helpers"
 	"github.com/liobrdev/simplepasswords_vaults/tests/setup"
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	bodyFmt := `{` +
 		`"user_slug":"%s",` +
 		`"vault_slug":"%s",` +
@@ -27,281 +28,262 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 		`"secret_string":"%s"` +
 		`}`
 
+	dummySlug := helpers.NewSlug(t)
+
 	t.Run("empty_body_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, "", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character '\x00' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse,
+			"invalid character '\x00' looking for beginning of value", "",
 		)
 	})
 
 	t.Run("array_body_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, "[]", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character '[' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value",
+			"[]",
 		)
 
 		testCreateSecretClientError(
-			t, app, db, "[{}]", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character '[' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value",
+			"[{}]",
 		)
 
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`[`+bodyFmt+`]`,
-				helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorParse,
-			"invalid character '[' looking for beginning of value",
-		)
-	})
-
-	t.Run("null_body_400_bad_request", func(t *testing.T) {
-		testCreateSecretClientError(
-			t, app, db, "null", http.StatusBadRequest, utils.ErrorUserSlug, "",
+			t, app, conf, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value",
+			fmt.Sprintf("[" + bodyFmt + "]", dummySlug, dummySlug, dummySlug, "abc", "123"),
 		)
 	})
 
 	t.Run("boolean_body_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, "true", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character 't' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, "invalid character 't' looking for beginning of value",
+			"true",
 		)
 
 		testCreateSecretClientError(
-			t, app, db, "false", http.StatusBadRequest, utils.ErrorParse,
-			"invalid character 'f' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, "invalid character 'f' looking for beginning of value",
+			"false",
 		)
 	})
 
 	t.Run("string_body_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, "\"Valid JSON, but not an object.\"", http.StatusBadRequest,
-			utils.ErrorParse, "invalid character '\"' looking for beginning of value",
+			t, app, conf, 400, utils.ErrorParse, `invalid character '"' looking for beginning of value`,
+			`"Valid JSON, but not an object."`,
 		)
 	})
 
+	t.Run("null_body_400_bad_request", func(t *testing.T) {
+		testCreateSecretClientError(t, app, conf, 400, utils.ErrorUserSlug, "", "null")
+	})
+
 	t.Run("empty_object_body_400_bad_request", func(t *testing.T) {
-		testCreateSecretClientError(
-			t, app, db, "{}", http.StatusBadRequest, utils.ErrorUserSlug, "",
-		)
+		testCreateSecretClientError(t, app, conf, 400, utils.ErrorUserSlug, "", "{}")
 	})
 
 	t.Run("missing_user_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"usr_slug":"Spelled wrong!",`+
-					`"vault_slug":"%s",`+
-					`"entry_slug":"%s",`+
-					`"secret_label":"%s",`+
-					`"secret_string":"%s"`+
+			t, app, conf, 400, utils.ErrorUserSlug, "", fmt.Sprintf(
+				`{` +
+					`"usr_slug":"Spelled wrong!",` +
+					`"vault_slug":"%s",` +
+					`"entry_slug":"%s",` +
+					`"secret_label":"%s",` +
+					`"secret_string":"%s"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorUserSlug, "",
+				dummySlug, dummySlug, "abc", "123",
+			),
 		)
 	})
 
 	t.Run("missing_vault_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":"%s",`+
-					`"vualt_slug":"Spelled wrong!",`+
-					`"entry_slug":"%s",`+
-					`"secret_label":"%s",`+
-					`"secret_string":"%s"`+
+			t, app, conf, 400, utils.ErrorVaultSlug, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":"%s",` +
+					`"vualt_slug":"Spelled wrong!",` +
+					`"entry_slug":"%s",` +
+					`"secret_label":"%s",` +
+					`"secret_string":"%s"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorVaultSlug, "",
+				dummySlug, dummySlug, "abc", "123",
+			),
 		)
 	})
 
 	t.Run("missing_entry_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":"%s",`+
-					`"vault_slug":"%s",`+
-					`"enry_slug":"Spelled wrong!",`+
-					`"secret_label":"%s",`+
-					`"secret_string":"%s"`+
+			t, app, conf, 400, utils.ErrorEntrySlug, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":"%s",` +
+					`"vault_slug":"%s",` +
+					`"enry_slug":"Spelled wrong!",` +
+					`"secret_label":"%s",` +
+					`"secret_string":"%s"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorEntrySlug, "",
+				dummySlug, dummySlug, "abc", "123",
+			),
 		)
 	})
 
 	t.Run("missing_secret_label_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":"%s",`+
-					`"vault_slug":"%s",`+
-					`"entry_slug":"%s",`+
-					`"secret_labl":"Spelled wrong!",`+
-					`"secret_string":"%s"`+
+			t, app, conf, 400, utils.ErrorSecretLabel, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":"%s",` +
+					`"vault_slug":"%s",` +
+					`"entry_slug":"%s",` +
+					`"secret_labl":"Spelled wrong!",` +
+					`"secret_string":"%s"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), "123",
-			), http.StatusBadRequest, utils.ErrorSecretLabel, "",
+				dummySlug, dummySlug, dummySlug, "123",
+			),
 		)
 	})
 
 	t.Run("missing_secret_string_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":"%s",`+
-					`"vault_slug":"%s",`+
-					`"entry_slug":"%s",`+
-					`"secret_label":"%s",`+
-					`"secret_strng":"Spelled wrong!"`+
+			t, app, conf, 400, utils.ErrorSecretString, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":"%s",` +
+					`"vault_slug":"%s",` +
+					`"entry_slug":"%s",` +
+					`"secret_label":"%s",` +
+					`"secret_strng":"Spelled wrong!"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), "abc",
-			), http.StatusBadRequest, utils.ErrorSecretString, "",
+				dummySlug, dummySlug, dummySlug, "abc",
+			),
 		)
 	})
 
 	t.Run("null_user_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":null,`+
-					`"vault_slug":"%s",`+
-					`"entry_slug":"%s",`+
-					`"secret_label":"%s",`+
-					`"secret_string":"%s"`+
+			t, app, conf, 400, utils.ErrorUserSlug, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":null,` +
+					`"vault_slug":"%s",` +
+					`"entry_slug":"%s",` +
+					`"secret_label":"%s",` +
+					`"secret_string":"%s"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorUserSlug, "",
+				dummySlug, dummySlug, "abc", "123",
+			),
 		)
 	})
 
 	t.Run("null_vault_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":"%s",`+
-					`"vault_slug":null,`+
-					`"entry_slug":"%s",`+
-					`"secret_label":"%s",`+
-					`"secret_string":"%s"`+
+			t, app, conf, 400, utils.ErrorVaultSlug, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":"%s",` +
+					`"vault_slug":null,` +
+					`"entry_slug":"%s",` +
+					`"secret_label":"%s",` +
+					`"secret_string":"%s"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorVaultSlug, "",
+				dummySlug, dummySlug, "abc", "123",
+			),
 		)
 	})
 
 	t.Run("null_entry_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":"%s",`+
-					`"vault_slug":"%s",`+
-					`"entry_slug":null,`+
-					`"secret_label":"%s",`+
-					`"secret_string":"%s"`+
+			t, app, conf, 400, utils.ErrorEntrySlug, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":"%s",` +
+					`"vault_slug":"%s",` +
+					`"entry_slug":null,` +
+					`"secret_label":"%s",` +
+					`"secret_string":"%s"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorEntrySlug, "",
+				dummySlug, dummySlug, "abc", "123",
+			),
 		)
 	})
 
 	t.Run("null_secret_label_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":"%s",`+
-					`"vault_slug":"%s",`+
-					`"entry_slug":"%s",`+
-					`"secret_label":null,`+
-					`"secret_string":"%s"`+
+			t, app, conf, 400, utils.ErrorSecretLabel, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":"%s",` +
+					`"vault_slug":"%s",` +
+					`"entry_slug":"%s",` +
+					`"secret_label":null,` +
+					`"secret_string":"%s"` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), "123",
-			), http.StatusBadRequest, utils.ErrorSecretLabel, "",
+				dummySlug, dummySlug, dummySlug, "123",
+			),
 		)
 	})
 
 	t.Run("null_secret_string_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				`{`+
-					`"user_slug":"%s",`+
-					`"vault_slug":"%s",`+
-					`"entry_slug":"%s",`+
-					`"secret_label":"%s",`+
-					`"secret_string":null`+
+			t, app, conf, 400, utils.ErrorSecretString, "", fmt.Sprintf(
+				`{` +
+					`"user_slug":"%s",` +
+					`"vault_slug":"%s",` +
+					`"entry_slug":"%s",` +
+					`"secret_label":"%s",` +
+					`"secret_string":null` +
 					`}`,
-				helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), "abc",
-			), http.StatusBadRequest, utils.ErrorSecretString, "",
+				dummySlug, dummySlug, dummySlug, "abc",
+			),
 		)
 	})
 
 	t.Run("empty_user_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				bodyFmt, "", helpers.NewSlug(t), helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorUserSlug, "",
+			t, app, conf, 400, utils.ErrorUserSlug, "",
+			fmt.Sprintf(bodyFmt, "", dummySlug, dummySlug, "abc", "123"),
 		)
 	})
 
 	t.Run("empty_vault_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				bodyFmt, helpers.NewSlug(t), "", helpers.NewSlug(t), "abc", "123",
-			), http.StatusBadRequest, utils.ErrorVaultSlug, "",
+			t, app, conf, 400, utils.ErrorVaultSlug, "",
+			fmt.Sprintf(bodyFmt, dummySlug, "", dummySlug, "abc", "123"),
 		)
 	})
 
 	t.Run("empty_entry_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				bodyFmt,
-				helpers.NewSlug(t), helpers.NewSlug(t), "", "abc", "123",
-			), http.StatusBadRequest, utils.ErrorEntrySlug, "",
+			t, app, conf, 400, utils.ErrorEntrySlug, "",
+			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, "", "abc", "123"),
 		)
 	})
 
 	t.Run("empty_secret_label_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				bodyFmt,
-				helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), "", "123",
-			), http.StatusBadRequest, utils.ErrorSecretLabel, "",
+			t, app, conf, 400, utils.ErrorSecretLabel, "",
+			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "", "123"),
 		)
 	})
 
 	t.Run("empty_secret_string_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
-			t, app, db, fmt.Sprintf(
-				bodyFmt,
-				helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), "abc", "",
-			), http.StatusBadRequest, utils.ErrorSecretString, "",
+			t, app, conf, 400, utils.ErrorSecretString, "",
+			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "abc", ""),
 		)
 	})
 
 	t.Run("too_long_secret_label_400_bad_request", func(t *testing.T) {
-		// `label` is a random string greater than 255 characters in length
 		if label, err := utils.GenerateSlug(256); err != nil {
 			t.Fatalf("Generate long string failed: %s", err.Error())
 		} else {
 			testCreateSecretClientError(
-				t, app, db, fmt.Sprintf(
-					bodyFmt,
-					helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), label, "123",
-				), http.StatusBadRequest, utils.ErrorSecretLabel, "Too long (256 > 255)",
+				t, app, conf, 400, utils.ErrorSecretLabel, "Too long",
+				fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, label, "123"),
 			)
 		}
 	})
 
 	t.Run("too_long_secret_string_400_bad_request", func(t *testing.T) {
-		// `str` is a random string greater than 1000 characters in length
 		if str, err := utils.GenerateSlug(1001); err != nil {
 			t.Fatalf("Generate long string failed: %s", err.Error())
 		} else {
 			testCreateSecretClientError(
-				t, app, db, fmt.Sprintf(
-					bodyFmt,
-					helpers.NewSlug(t), helpers.NewSlug(t), helpers.NewSlug(t), "abc", str,
-				), http.StatusBadRequest, utils.ErrorSecretString, "Too long (1001 > 1000)",
+				t, app, conf, 400, utils.ErrorSecretString, "Too long",
+				fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "abc", str),
 			)
 		}
 	})
@@ -313,10 +295,9 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 		entrySlug := entries[3].Slug
 
 		testCreateSecretClientError(
-			t, app, db,
-			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, secrets[7].Label, "123"),
-			http.StatusConflict, utils.ErrorFailedDB,
+			t, app, conf, 500, utils.ErrorFailedDB,
 			"UNIQUE constraint failed: secrets.label, secrets.entry_slug",
+			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, secrets[7].Label, "123"),
 		)
 	})
 
@@ -329,7 +310,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 		secretString := "secret[_string='food.eater@email.dev']@0.1.1.2"
 
 		testCreateSecretSuccess(
-			t, app, db, userSlug, vaultSlug, entrySlug, secretLabel, secretString,
+			t, app, db, conf, secretLabel, secretString,
 			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, secretLabel, secretString),
 		)
 	})
@@ -355,18 +336,15 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB) {
 			userSlug, vaultSlug, entrySlug, secretLabel, secretString,
 		)
 
-		testCreateSecretSuccess(
-			t, app, db, userSlug, vaultSlug, entrySlug, secretLabel, secretString,
-			validBodyIrrelevantData,
-		)
+		testCreateSecretSuccess(t, app, db, conf, secretLabel, secretString, validBodyIrrelevantData)
 	})
 }
 
 func testCreateSecretClientError(
-	t *testing.T, app *fiber.App, db *gorm.DB, body string, expectedStatus int,
-	expectedMessage string, expectedDetail string,
+	t *testing.T, app *fiber.App, conf *config.AppConfig, expectedStatus int,
+	expectedMessage, expectedDetail, body string,
 ) {
-	resp := newRequestCreateSecret(t, app, body)
+	resp := newRequestCreateSecret(t, app, conf, body)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.CreateSecret,
@@ -377,15 +355,15 @@ func testCreateSecretClientError(
 }
 
 func testCreateSecretSuccess(
-	t *testing.T, app *fiber.App, db *gorm.DB,
-	userSlug, vaultSlug, entrySlug, secretLabel, secretString, body string,
+	t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig,
+	secretLabel, secretString, body string,
 ) {
 	var secretCount int64
 	helpers.CountSecrets(t, db, &secretCount)
 	require.EqualValues(t, 16, secretCount)
 
-	resp := newRequestCreateSecret(t, app, body)
-	require.Equal(t, http.StatusNoContent, resp.StatusCode)
+	resp := newRequestCreateSecret(t, app, conf, body)
+	require.Equal(t, 204, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())
@@ -395,20 +373,24 @@ func testCreateSecretSuccess(
 
 	var secret models.Secret
 	helpers.QueryTestSecretByLabel(t, db, &secret, secretLabel)
+
 	require.Equal(t, secret.CreatedAt, secret.UpdatedAt)
 	require.Equal(t, secretLabel, secret.Label)
 	require.Equal(t, secretString, secret.String)
-	require.Equal(t, userSlug, secret.UserSlug)
-	require.Equal(t, vaultSlug, secret.VaultSlug)
-	require.Equal(t, entrySlug, secret.EntrySlug)
 	helpers.CountSecrets(t, db, &secretCount)
 	require.EqualValues(t, 17, secretCount)
 }
 
-func newRequestCreateSecret(t *testing.T, app *fiber.App, body string) *http.Response {
+func newRequestCreateSecret(
+	t *testing.T, app *fiber.App, conf *config.AppConfig, body string,
+) *http.Response {
+
 	reqBody := strings.NewReader(body)
-	req := httptest.NewRequest(http.MethodPost, "/api/secrets", reqBody)
+	req := httptest.NewRequest("POST", "/api/secrets", reqBody)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Client-Operation", utils.CreateSecret)
+	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+
 	resp, err := app.Test(req)
 
 	if err != nil {

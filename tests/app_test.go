@@ -60,9 +60,9 @@ func runTests(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig)
 		testRetrieveEntry(t, app, db, conf)
 	})
 
-	// t.Run("test_update_entry", func(t *testing.T) {
-	// 	testUpdateEntry(t, app, db)
-	// })
+	t.Run("test_update_entry", func(t *testing.T) {
+		testUpdateEntry(t, app, db, conf)
+	})
 
 	// t.Run("test_delete_entry", func(t *testing.T) {
 	// 	testDeleteEntry(t, app, db)

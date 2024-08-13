@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,76 +18,40 @@ func (H Handler) UpdateSecret(c *fiber.Ctx) error {
 	body := UpdateSecretRequestBody{}
 
 	if err := c.BodyParser(&body); err != nil {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.UpdateSecret,
-			string(utils.ErrorParse),
-			err.Error(),
-		)
+		return utils.RespondWithError(c, 400, utils.UpdateSecret, utils.ErrorParse, err.Error())
 	}
 
 	if body.Label == "" && body.String == "" {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.UpdateSecret,
-			string(utils.ErrorEmptyUpdateSecret),
-			"Likely (null|empty) (object|fields).",
+			c, 400, utils.UpdateSecret, utils.ErrorEmptyUpdateSecret, "Null or empty object or fields.",
 		)
 	}
 
-	if body.Label != "" {
-		if len(body.Label) > 255 {
-			return utils.RespondWithError(
-				c,
-				fiber.StatusBadRequest,
-				utils.UpdateSecret,
-				string(utils.ErrorSecretLabel),
-				fmt.Sprintf("Too long (%d > 255)", len(body.Label)),
-			)
-		}
+	if len(body.Label) > 255 {
+		return utils.RespondWithError(c, 400, utils.UpdateSecret, utils.ErrorSecretLabel, "Too long")
 	}
 
-	if body.String != "" && len(body.String) > 1000 {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.UpdateSecret,
-			string(utils.ErrorSecretString),
-			fmt.Sprintf("Too long (%d > 1000)", len(body.String)),
-		)
+	if len(body.String) > 1000 {
+		return utils.RespondWithError(c, 400, utils.UpdateSecret, utils.ErrorSecretString, "Too long")
 	}
 
 	slug := c.Params("slug")
 
-	if result := H.DB.Model(&models.Secret{}).Where("slug = ?", slug).Updates(
-		models.Secret{Label: body.Label, String: body.String},
-	); result.Error != nil {
+	if result := H.DB.Model(&models.Secret{}).
+	Where("slug = ?", slug).Updates(models.Secret{Label: body.Label, String: body.String});
+	result.Error != nil {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.UpdateSecret,
-			string(utils.ErrorFailedDB),
-			result.Error.Error(),
+			c, 500, utils.UpdateSecret, utils.ErrorFailedDB, result.Error.Error(),
 		)
 	} else if n := result.RowsAffected; n == 0 {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusNotFound,
-			utils.UpdateSecret,
-			string(utils.ErrorNoRowsAffected),
-			"Likely that slug was not found.",
+			c, 404, utils.UpdateSecret, utils.ErrorNoRowsAffected, "Likely that slug was not found.",
 		)
 	} else if n > 1 {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.UpdateSecret,
-			"result.RowsAffected > 1",
-			strconv.FormatInt(n, 10),
+			c, 500, utils.UpdateSecret, "result.RowsAffected > 1", strconv.FormatInt(n, 10),
 		)
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(204)
 }

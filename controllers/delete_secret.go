@@ -13,42 +13,24 @@ func (H Handler) DeleteSecret(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	if !utils.SlugRegexp.MatchString(slug) {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.DeleteSecret,
-			string(utils.ErrorSecretSlug),
-			slug,
-		)
+		return utils.RespondWithError(c, 400, utils.DeleteSecret, utils.ErrorSecretSlug, slug)
 	}
 
 	var secret models.Secret
 
 	if result := H.DB.Delete(&secret, "slug = ?", slug); result.Error != nil {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.DeleteSecret,
-			string(utils.ErrorFailedDB),
-			result.Error.Error(),
+			c, 500, utils.DeleteSecret, utils.ErrorFailedDB, result.Error.Error(),
 		)
 	} else if n := result.RowsAffected; n == 0 {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusNotFound,
-			utils.DeleteSecret,
-			string(utils.ErrorNoRowsAffected),
-			"Likely that slug was not found.",
+			c, 404, utils.DeleteSecret, utils.ErrorNoRowsAffected, "Likely that slug was not found.",
 		)
 	} else if n > 1 {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.DeleteSecret,
-			fmt.Sprintf("result.RowsAffected (%d) > 1", n),
-			"",
+			c, 500, utils.DeleteSecret, fmt.Sprintf("result.RowsAffected (%d) > 1", n), "",
 		)
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(204)
 }

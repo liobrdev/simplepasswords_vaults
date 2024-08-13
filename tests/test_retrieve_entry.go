@@ -11,37 +11,34 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/liobrdev/simplepasswords_vaults/config"
 	"github.com/liobrdev/simplepasswords_vaults/models"
 	"github.com/liobrdev/simplepasswords_vaults/tests/helpers"
 	"github.com/liobrdev/simplepasswords_vaults/tests/setup"
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func testRetrieveEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testRetrieveEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
 		slug := "notEvenARealSlug"
-		testRetrieveEntryClientError(
-			t, app, db, slug, http.StatusBadRequest, utils.ErrorEntrySlug, slug,
-		)
+		testRetrieveEntryClientError(t, app, conf, 400, utils.ErrorEntrySlug, slug, slug)
 	})
 
 	t.Run("valid_slug_404_not_found", func(t *testing.T) {
 		slug := helpers.NewSlug(t)
-		testRetrieveEntryClientError(
-			t, app, db, slug, http.StatusNotFound, utils.ErrorNotFound, slug,
-		)
+		testRetrieveEntryClientError(t, app, conf, 404, utils.ErrorNotFound, slug, slug)
 	})
 
 	t.Run("valid_slug_200_ok", func(t *testing.T) {
-		testRetrieveEntrySuccess(t, app, db)
+		testRetrieveEntrySuccess(t, app, db, conf)
 	})
 }
 
 func testRetrieveEntryClientError(
-	t *testing.T, app *fiber.App, db *gorm.DB, slug string, expectedStatus int,
-	expectedMessage string, expectedDetail string,
+	t *testing.T, app *fiber.App, conf *config.AppConfig, expectedStatus int,
+	expectedMessage, expectedDetail, slug string,
 ) {
-	resp := newRequestRetrieveEntry(t, app, slug)
+	resp := newRequestRetrieveEntry(t, app, conf, slug)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.RetrieveEntry,
@@ -50,14 +47,14 @@ func testRetrieveEntryClientError(
 	})
 }
 
-func testRetrieveEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testRetrieveEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	setup.SetUpWithData(t, db)
 
 	var expectedEntry models.Entry
 	helpers.QueryTestEntry(t, db, &expectedEntry, "entry@0.1.1.*")
 
-	resp := newRequestRetrieveEntry(t, app, expectedEntry.Slug)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	resp := newRequestRetrieveEntry(t, app, conf, expectedEntry.Slug)
+	require.Equal(t, 200, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())
@@ -69,7 +66,6 @@ func testRetrieveEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 		}
 
 		require.Equal(t, expectedEntry.Slug, actualEntry.Slug)
-		require.Equal(t, expectedEntry.UserSlug, actualEntry.UserSlug)
 		require.Equal(t, expectedEntry.Title, actualEntry.Title)
 		require.Equal(t, "entry@0.1.1.*", actualEntry.Title)
 		require.Len(t, actualEntry.Secrets, 2)
@@ -80,9 +76,15 @@ func testRetrieveEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 	}
 }
 
-func newRequestRetrieveEntry(t *testing.T, app *fiber.App, slug string) *http.Response {
-	req := httptest.NewRequest(http.MethodGet, "/api/entries/"+slug, nil)
+func newRequestRetrieveEntry(
+	t *testing.T, app *fiber.App, conf *config.AppConfig, slug string,
+) *http.Response {
+
+	req := httptest.NewRequest("GET", "/api/entries/" + slug, nil)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Client-Operation", utils.RetrieveEntry)
+	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+
 	resp, err := app.Test(req)
 
 	if err != nil {

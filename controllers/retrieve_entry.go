@@ -15,44 +15,24 @@ func (H Handler) RetrieveEntry(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	if !utils.SlugRegexp.MatchString(slug) {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.RetrieveEntry,
-			string(utils.ErrorEntrySlug),
-			slug,
-		)
+		return utils.RespondWithError(c, 400, utils.RetrieveEntry, utils.ErrorEntrySlug, slug)
 	}
 
 	var entry models.Entry
 
 	if result := H.DB.Preload("Secrets").First(&entry, "slug = ?", slug); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return utils.RespondWithError(
-				c,
-				fiber.StatusNotFound,
-				utils.RetrieveEntry,
-				string(utils.ErrorNotFound),
-				slug,
-			)
+			return utils.RespondWithError(c, 404, utils.RetrieveEntry, utils.ErrorNotFound, slug)
 		}
 
 		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.RetrieveEntry,
-			string(utils.ErrorFailedDB),
-			result.Error.Error(),
+			c, 500, utils.RetrieveEntry, utils.ErrorFailedDB, result.Error.Error(),
 		)
 	} else if n := result.RowsAffected; n != 1 {
 		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.RetrieveEntry,
-			"result.RowsAffected != 1",
-			strconv.FormatInt(n, 10),
+			c, 500, utils.RetrieveEntry, "result.RowsAffected != 1", strconv.FormatInt(n, 10),
 		)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(&entry)
+	return c.Status(200).JSON(&entry)
 }

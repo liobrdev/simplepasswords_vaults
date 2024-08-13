@@ -1,4 +1,4 @@
-package entries
+package controllers
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type UpdateEntryRequestBody struct {
 	Title string `json:"entry_title"`
 }
 
-func (h handler) UpdateEntry(c *fiber.Ctx) error {
+func (H Handler) UpdateEntry(c *fiber.Ctx) error {
 	body := UpdateEntryRequestBody{}
 
 	if err := c.BodyParser(&body); err != nil {
@@ -49,7 +49,7 @@ func (h handler) UpdateEntry(c *fiber.Ctx) error {
 
 	slug := c.Params("slug")
 
-	if result := h.DB.Model(&models.Entry{}).Where("slug = ?", slug).Update(
+	if result := H.DB.Model(&models.Entry{}).Where("slug = ?", slug).Update(
 		"title",
 		body.Title,
 	); result.Error != nil {

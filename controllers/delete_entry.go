@@ -1,4 +1,4 @@
-package entries
+package controllers
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func (h handler) DeleteEntry(c *fiber.Ctx) error {
+func (H Handler) DeleteEntry(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	if !utils.SlugRegexp.MatchString(slug) {
@@ -27,7 +27,7 @@ func (h handler) DeleteEntry(c *fiber.Ctx) error {
 	var entry models.Entry
 	var result *gorm.DB
 
-	if err := h.DB.Transaction(func(tx *gorm.DB) error {
+	if err := H.DB.Transaction(func(tx *gorm.DB) error {
 		if result = tx.Delete(&entry, "slug = ?", slug); result.Error != nil {
 			return result.Error
 		} else if n := result.RowsAffected; n == 0 {

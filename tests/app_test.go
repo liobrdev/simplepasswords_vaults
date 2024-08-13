@@ -17,19 +17,10 @@ func TestApp(t *testing.T) {
 		t.Fatal("Failed to load config from environment:", err)
 	}
 
-	t.Run("is_behind_proxy", func(t *testing.T) {
-		conf.GO_TESTING_CONTEXT = t
-		conf.BEHIND_PROXY = true
-		app, dbs := app.CreateApp(&conf)
-		runTests(t, app, dbs, &conf)
-	})
+	conf.GO_TESTING_CONTEXT = t
+	app, dbs := app.CreateApp(&conf)
 
-	t.Run("is_not_behind_proxy", func(t *testing.T) {
-		conf.GO_TESTING_CONTEXT = t
-		conf.BEHIND_PROXY = false
-		app, dbs := app.CreateApp(&conf)
-		runTests(t, app, dbs, &conf)
-	})
+	runTests(t, app, dbs, &conf)
 }
 
 func runTests(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
@@ -61,9 +52,9 @@ func runTests(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig)
 		testDeleteVault(t, app, db, conf)
 	})
 
-	// t.Run("test_create_entry", func(t *testing.T) {
-	// 	testCreateEntry(t, app, db)
-	// })
+	t.Run("test_create_entry", func(t *testing.T) {
+		testCreateEntry(t, app, db, conf)
+	})
 
 	// t.Run("test_retrieve_entry", func(t *testing.T) {
 	// 	testRetrieveEntry(t, app, db)

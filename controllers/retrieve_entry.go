@@ -1,4 +1,4 @@
-package entries
+package controllers
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func (h handler) RetrieveEntry(c *fiber.Ctx) error {
+func (H Handler) RetrieveEntry(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	if !utils.SlugRegexp.MatchString(slug) {
@@ -26,7 +26,7 @@ func (h handler) RetrieveEntry(c *fiber.Ctx) error {
 
 	var entry models.Entry
 
-	if result := h.DB.Preload("Secrets").First(&entry, "slug = ?", slug); result.Error != nil {
+	if result := H.DB.Preload("Secrets").First(&entry, "slug = ?", slug); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return utils.RespondWithError(
 				c,

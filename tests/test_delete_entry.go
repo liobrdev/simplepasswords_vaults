@@ -10,37 +10,36 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/liobrdev/simplepasswords_vaults/config"
 	"github.com/liobrdev/simplepasswords_vaults/models"
 	"github.com/liobrdev/simplepasswords_vaults/tests/helpers"
 	"github.com/liobrdev/simplepasswords_vaults/tests/setup"
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
-func testDeleteEntry(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testDeleteEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	t.Run("valid_slug_404_not_found", func(t *testing.T) {
 		testDeleteEntryClientError(
-			t, app, db, helpers.NewSlug(t), http.StatusNotFound, utils.ErrorNoRowsAffected,
-			"Likely that slug was not found.",
+			t, app, conf, 404, utils.ErrorNoRowsAffected, "Likely that slug was not found.",
+			helpers.NewSlug(t),
 		)
 	})
 
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
 		slug := "notEvenARealSlug"
-		testDeleteEntryClientError(
-			t, app, db, slug, http.StatusBadRequest, utils.ErrorEntrySlug, slug,
-		)
+		testDeleteEntryClientError(t, app, conf, 400, utils.ErrorEntrySlug, slug, slug)
 	})
 
 	t.Run("valid_slug_204_no_content", func(t *testing.T) {
-		testDeleteEntrySuccess(t, app, db)
+		testDeleteEntrySuccess(t, app, db, conf)
 	})
 }
 
 func testDeleteEntryClientError(
-	t *testing.T, app *fiber.App, db *gorm.DB, slug string, expectedStatus int,
-	expectedMessage string, expectedDetail string,
+	t *testing.T, app *fiber.App, conf *config.AppConfig, expectedStatus int,
+	expectedMessage, expectedDetail, slug string,
 ) {
-	resp := newRequestDeleteEntry(t, app, slug)
+	resp := newRequestDeleteEntry(t, app, conf, slug)
 	require.Equal(t, expectedStatus, resp.StatusCode)
 	helpers.AssertErrorResponseBody(t, resp, utils.ErrorResponseBody{
 		ClientOperation: utils.DeleteEntry,
@@ -49,7 +48,7 @@ func testDeleteEntryClientError(
 	})
 }
 
-func testDeleteEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
+func testDeleteEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	setup.SetUpWithData(t, db)
 
 	var entry models.Entry
@@ -71,8 +70,8 @@ func testDeleteEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 	helpers.CountSecrets(t, db, &secretCount)
 	require.EqualValues(t, 16, secretCount)
 
-	resp := newRequestDeleteEntry(t, app, entry.Slug)
-	require.Equal(t, http.StatusNoContent, resp.StatusCode)
+	resp := newRequestDeleteEntry(t, app, conf, entry.Slug)
+	require.Equal(t, 204, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())
@@ -105,9 +104,15 @@ func testDeleteEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB) {
 	require.EqualValues(t, 14, secretCount)
 }
 
-func newRequestDeleteEntry(t *testing.T, app *fiber.App, slug string) *http.Response {
-	req := httptest.NewRequest(http.MethodDelete, "/api/entries/"+slug, nil)
+func newRequestDeleteEntry(
+	t *testing.T, app *fiber.App, conf *config.AppConfig, slug string,
+) *http.Response {
+
+	req := httptest.NewRequest("DELETE", "/api/entries/" + slug, nil)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Client-Operation", utils.CreateEntry)
+	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+
 	resp, err := app.Test(req)
 
 	if err != nil {

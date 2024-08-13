@@ -15,13 +15,7 @@ func (H Handler) DeleteEntry(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	if !utils.SlugRegexp.MatchString(slug) {
-		return utils.RespondWithError(
-			c,
-			fiber.StatusBadRequest,
-			utils.DeleteEntry,
-			string(utils.ErrorEntrySlug),
-			slug,
-		)
+		return utils.RespondWithError(c, 400, utils.DeleteEntry, utils.ErrorEntrySlug, slug)
 	}
 
 	var entry models.Entry
@@ -31,7 +25,7 @@ func (H Handler) DeleteEntry(c *fiber.Ctx) error {
 		if result = tx.Delete(&entry, "slug = ?", slug); result.Error != nil {
 			return result.Error
 		} else if n := result.RowsAffected; n == 0 {
-			return errors.New(string(utils.ErrorNoRowsAffected))
+			return errors.New(utils.ErrorNoRowsAffected)
 		} else if n > 1 {
 			return fmt.Errorf("result.RowsAffected (%d) > 1", n)
 		}
@@ -42,32 +36,14 @@ func (H Handler) DeleteEntry(c *fiber.Ctx) error {
 
 		return nil
 	}); err != nil {
-		if errText := err.Error(); errText == string(utils.ErrorNoRowsAffected) {
+		if errText := err.Error(); errText == utils.ErrorNoRowsAffected {
 			return utils.RespondWithError(
-				c,
-				fiber.StatusNotFound,
-				utils.DeleteEntry,
-				errText,
-				"Likely that slug was not found.",
+				c, 404, utils.DeleteEntry, errText, "Likely that slug was not found.",
 			)
-		} else if utils.RowsRegexp.MatchString(errText) {
-			return utils.RespondWithError(
-				c,
-				fiber.StatusConflict,
-				utils.DeleteEntry,
-				errText,
-				"",
-			)
+		} else {
+			return utils.RespondWithError(c, 500, utils.DeleteEntry, utils.ErrorFailedDB, err.Error())
 		}
-
-		return utils.RespondWithError(
-			c,
-			fiber.StatusConflict,
-			utils.DeleteEntry,
-			string(utils.ErrorFailedDB),
-			err.Error(),
-		)
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(204)
 }

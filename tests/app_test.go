@@ -8,6 +8,8 @@ import (
 
 	"github.com/liobrdev/simplepasswords_vaults/app"
 	"github.com/liobrdev/simplepasswords_vaults/config"
+	"github.com/liobrdev/simplepasswords_vaults/routes"
+	testDB "github.com/liobrdev/simplepasswords_vaults/tests/database"
 )
 
 func TestApp(t *testing.T) {
@@ -18,9 +20,11 @@ func TestApp(t *testing.T) {
 	}
 
 	conf.GO_TESTING_CONTEXT = t
-	app, dbs := app.CreateApp(&conf)
+	app := app.CreateApp(&conf)
+	db := testDB.Init(&conf)
+	routes.Register(app, db, &conf)
 
-	runTests(t, app, dbs, &conf)
+	runTests(t, app, db, &conf)
 }
 
 func runTests(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {

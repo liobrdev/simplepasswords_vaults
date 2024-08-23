@@ -5,87 +5,51 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
 )
 
 type AppConfig struct {
-	ENVIRONMENT             string
-	BEHIND_PROXY            bool
-	PROXY_IP_ADDRESSES      []string
-	VAULTS_ACCESS_TOKEN			string
-	VAULTS_DB_USER          string
-	VAULTS_DB_PASSWORD      string
-	VAULTS_DB_HOST          string
-	VAULTS_DB_PORT          string
-	VAULTS_DB_NAME          string
-	VAULTS_HOST							string
-	VAULTS_PORT							string
-	API_GATEWAY_HOST				string
-	API_GATEWAY_PORT				string
-	REDIS_PASSWORD          string
-	SECRET_KEY							string
-	GO_TESTING_CONTEXT			*testing.T
+	API_GATEWAY_HOST		string
+	API_GATEWAY_PORT		string
+	ENVIRONMENT					string
+	VAULTS_ACCESS_TOKEN	string
+	VAULTS_DB_HOST			string
+	VAULTS_DB_NAME			string
+	VAULTS_DB_PASSWORD	string
+	VAULTS_DB_PORT			string
+	VAULTS_DB_USER			string
+	VAULTS_HOST					string
+	VAULTS_PORT					string
+	GO_TESTING_CONTEXT	*testing.T
 }
 
 type envAbsPaths struct {
-	ENVIRONMENT             string
-	BEHIND_PROXY            string
-	PROXY_IP_ADDRESSES     	string
-	VAULTS_ACCESS_TOKEN			string
-	VAULTS_DB_USER          string
-	VAULTS_DB_PASSWORD      string
-	VAULTS_DB_HOST          string
-	VAULTS_DB_PORT          string
-	VAULTS_DB_NAME          string
-	VAULTS_HOST							string
-	VAULTS_PORT							string
-	API_GATEWAY_HOST				string
-	API_GATEWAY_PORT				string
-	REDIS_PASSWORD          string
-	SECRET_KEY							string
+	API_GATEWAY_HOST		string
+	API_GATEWAY_PORT		string
+	ENVIRONMENT					string
+	VAULTS_ACCESS_TOKEN	string
+	VAULTS_DB_HOST			string
+	VAULTS_DB_NAME			string
+	VAULTS_DB_PASSWORD	string
+	VAULTS_DB_PORT			string
+	VAULTS_DB_USER			string
+	VAULTS_HOST					string
+	VAULTS_PORT					string
 }
 
-func getDefaultConfigValue(fieldName string) string {
-	var defaultConfigValue string
-
-	if fieldName == "ENVIRONMENT" {
-		defaultConfigValue = "development"
-	} else if fieldName == "API_GATEWAY_HOST" {
-		defaultConfigValue = "localhost"
-	} else if fieldName == "API_GATEWAY_PORT" {
-		defaultConfigValue = "5050"
-	} else if fieldName == "VAULTS_HOST" {
-		defaultConfigValue = "localhost"
-	} else if fieldName == "VAULTS_PORT" {
-		defaultConfigValue = "8080"
-	}
-
-	return defaultConfigValue
-}
-
-func scanFileFirstLineToConf(file *os.File, path string, fieldName string, conf *AppConfig,
-confElem *reflect.Value) {
+func scanFileFirstLineToConf(file *os.File, confElem *reflect.Value, path, fieldName string) {
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 
 	if contents := scanner.Text(); scanner.Err() != nil {
 		log.Fatalf(
-			"Error reading contents of '%s' from environment variable %s:\n%s", path, fieldName,
-			scanner.Err(),
+			"Error reading contents of '%s' from environment variable %s:\n%s",
+			path, fieldName, scanner.Err(),
 		)
-	} else if fieldName == "BEHIND_PROXY" {
-		if contents == "true" {
-			conf.BEHIND_PROXY = true
-		} else {
-			conf.BEHIND_PROXY = false
-		}
-	} else if fieldName == "PROXY_IP_ADDRESSES" {
-		conf.PROXY_IP_ADDRESSES = strings.Split(contents, ",")
 	} else if contents == "" {
-		confElem.FieldByName(fieldName).SetString(getDefaultConfigValue(fieldName))
+		log.Fatalf("Empty contents of '%s' from environment variable %s", path, fieldName)
 	} else {
 		confElem.FieldByName(fieldName).SetString(contents)
 	}
@@ -114,7 +78,7 @@ func loadFileContentsFromPathsToConf(
 
 		defer file.Close()
 
-		scanFileFirstLineToConf(file, path, fieldName, conf, &confElem)
+		scanFileFirstLineToConf(file, &confElem, path, fieldName)
 	}
 }
 
@@ -123,7 +87,7 @@ func LoadConfigFromEnv(conf *AppConfig) (err error) {
 	viper.AutomaticEnv()
 
 	if err = viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		if err.Error() == "open ./.env: no such file or directory" {
 			err = nil
 		} else {
 			return

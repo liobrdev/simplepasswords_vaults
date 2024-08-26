@@ -6,7 +6,7 @@ type User struct {
 	Slug      string    `json:"user_slug" gorm:"primaryKey;not null"`
 	CreatedAt time.Time `json:"-" gorm:"autoCreateTime:nano;not null"`
 	UpdatedAt time.Time `json:"-" gorm:"autoUpdateTime:nano;not null"`
-	Vaults    []Vault   `json:"vaults" gorm:"foreignKey:UserSlug;references:Slug;not null"`
+	Vaults    []Vault   `json:"-" gorm:"foreignKey:UserSlug;references:Slug;not null"`
 	Entries   []Entry   `json:"-" gorm:"foreignKey:UserSlug;references:Slug;not null"`
 	Secrets   []Secret  `json:"-" gorm:"foreignKey:UserSlug;references:Slug;not null"`
 }

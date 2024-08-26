@@ -5,6 +5,7 @@ const (
 	CreateVault   string = "create_vault"
 	CreateEntry   string = "create_entry"
 	CreateSecret  string = "create_secret"
+	ListVaults		string = "list_vaults"
 	RetrieveUser  string = "retrieve_user"
 	RetrieveVault string = "retrieve_vault"
 	RetrieveEntry string = "retrieve_entry"

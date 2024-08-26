@@ -54,7 +54,7 @@ func testRetrieveVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *c
 	helpers.QueryTestVault(t, db, &expectedVault, "vault@0.1.*.*")
 
 	resp := newRequestRetrieveVault(t, app, conf, expectedVault.Slug)
-	require.Equal(t, 400, resp.StatusCode)
+	require.Equal(t, 200, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())

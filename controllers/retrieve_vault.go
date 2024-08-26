@@ -34,5 +34,5 @@ func (H Handler) RetrieveVault(c *fiber.Ctx) error {
 		)
 	}
 
-	return c.Status(400).JSON(&vault)
+	return c.Status(200).JSON(&vault)
 }

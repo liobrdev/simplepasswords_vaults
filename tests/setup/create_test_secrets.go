@@ -10,11 +10,7 @@ import (
 )
 
 func createTestSecrets(
-	users *[]models.User,
-	vaults *[]models.Vault,
-	entries *[]models.Entry,
-	t *testing.T,
-	db *gorm.DB,
+	users *[]models.User, vaults *[]models.Vault, entries *[]models.Entry, t *testing.T, db *gorm.DB,
 ) (secrets []models.Secret) {
 	secrets = []models.Secret{
 		{
@@ -24,6 +20,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[0].Slug,
 			VaultSlug: (*vaults)[0].Slug,
 			UserSlug:  (*users)[0].Slug,
+			Priority:	 0,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -32,6 +29,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[0].Slug,
 			VaultSlug: (*vaults)[0].Slug,
 			UserSlug:  (*users)[0].Slug,
+			Priority:	 1,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -40,6 +38,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[1].Slug,
 			VaultSlug: (*vaults)[0].Slug,
 			UserSlug:  (*users)[0].Slug,
+			Priority:	 0,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -48,6 +47,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[1].Slug,
 			VaultSlug: (*vaults)[0].Slug,
 			UserSlug:  (*users)[0].Slug,
+			Priority:	 1,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -56,6 +56,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[2].Slug,
 			VaultSlug: (*vaults)[1].Slug,
 			UserSlug:  (*users)[0].Slug,
+			Priority:	 0,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -64,6 +65,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[2].Slug,
 			VaultSlug: (*vaults)[1].Slug,
 			UserSlug:  (*users)[0].Slug,
+			Priority:	 1,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -72,6 +74,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[3].Slug,
 			VaultSlug: (*vaults)[1].Slug,
 			UserSlug:  (*users)[0].Slug,
+			Priority:	 0,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -80,6 +83,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[3].Slug,
 			VaultSlug: (*vaults)[1].Slug,
 			UserSlug:  (*users)[0].Slug,
+			Priority:	 1,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -88,6 +92,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[4].Slug,
 			VaultSlug: (*vaults)[2].Slug,
 			UserSlug:  (*users)[1].Slug,
+			Priority:	 0,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -96,6 +101,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[4].Slug,
 			VaultSlug: (*vaults)[2].Slug,
 			UserSlug:  (*users)[1].Slug,
+			Priority:	 1,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -104,6 +110,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[5].Slug,
 			VaultSlug: (*vaults)[2].Slug,
 			UserSlug:  (*users)[1].Slug,
+			Priority:	 0,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -112,6 +119,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[5].Slug,
 			VaultSlug: (*vaults)[2].Slug,
 			UserSlug:  (*users)[1].Slug,
+			Priority:	 1,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -120,6 +128,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[6].Slug,
 			VaultSlug: (*vaults)[3].Slug,
 			UserSlug:  (*users)[1].Slug,
+			Priority:	 0,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -128,6 +137,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[6].Slug,
 			VaultSlug: (*vaults)[3].Slug,
 			UserSlug:  (*users)[1].Slug,
+			Priority:	 1,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -136,6 +146,7 @@ func createTestSecrets(
 			EntrySlug: (*entries)[7].Slug,
 			VaultSlug: (*vaults)[3].Slug,
 			UserSlug:  (*users)[1].Slug,
+			Priority:	 0,
 		},
 		{
 			Slug:      helpers.NewSlug(t),
@@ -144,11 +155,18 @@ func createTestSecrets(
 			EntrySlug: (*entries)[7].Slug,
 			VaultSlug: (*vaults)[3].Slug,
 			UserSlug:  (*users)[1].Slug,
+			Priority:	 1,
 		},
 	}
 
-	if result := db.Create(&secrets); result.Error != nil {
-		t.Fatalf("Create test secrets failed: %s", result.Error.Error())
+	for _, secret := range secrets {
+		if result := db.Create(&secret); result.Error != nil {
+			t.Fatalf("Create test secret failed: %s", result.Error.Error())
+		}
+	}
+
+	if result := db.Find(&secrets); result.Error != nil {
+		t.Fatalf("Find test secrets failed: %s", result.Error.Error())
 	}
 
 	return

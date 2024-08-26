@@ -33,8 +33,14 @@ func createTestVaults(users *[]models.User, t *testing.T, db *gorm.DB) (vaults [
 		},
 	}
 
-	if result := db.Create(&vaults); result.Error != nil {
-		t.Fatalf("Create test vaults failed: %s", result.Error.Error())
+	for _, vault := range vaults {
+		if result := db.Create(&vault); result.Error != nil {
+			t.Fatalf("Create test vault failed: %s", result.Error.Error())
+		}
+	}
+
+	if result := db.Find(&vaults); result.Error != nil {
+		t.Fatalf("Find test vaults failed: %s", result.Error.Error())
 	}
 
 	return

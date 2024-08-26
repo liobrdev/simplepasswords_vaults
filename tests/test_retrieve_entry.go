@@ -48,7 +48,7 @@ func testRetrieveEntryClientError(
 }
 
 func testRetrieveEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
-	setup.SetUpWithData(t, db)
+	_, _, _, secrets := setup.SetUpWithData(t, db)
 
 	var expectedEntry models.Entry
 	helpers.QueryTestEntry(t, db, &expectedEntry, "entry@0.1.1.*")
@@ -68,7 +68,17 @@ func testRetrieveEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *c
 		require.Equal(t, expectedEntry.Slug, actualEntry.Slug)
 		require.Equal(t, expectedEntry.Title, actualEntry.Title)
 		require.Equal(t, "entry@0.1.1.*", actualEntry.Title)
-		require.Len(t, actualEntry.Secrets, 2)
+
+		var secretsJSON []models.Secret
+
+		if secretsBytes, err := json.Marshal(secrets[6:8]); err != nil {
+			t.Fatalf("JSON marshal failed: %s", err.Error())
+		} else if err := json.Unmarshal(secretsBytes, &secretsJSON); err != nil {
+			t.Fatalf("JSON unmarshal failed: %s", err.Error())
+		}
+
+		require.ElementsMatch(t, secretsJSON, actualEntry.Secrets)
+		require.Less(t, actualEntry.Secrets[0].Priority, actualEntry.Secrets[1].Priority)
 		require.Equal(t, "secret[_label='username']@0.1.1.0", actualEntry.Secrets[0].Label)
 		require.Equal(t, "secret[_string='foodeater1234']@0.1.1.0", actualEntry.Secrets[0].String)
 		require.Equal(t, "secret[_label='password']@0.1.1.1", actualEntry.Secrets[1].Label)

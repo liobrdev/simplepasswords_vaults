@@ -10,10 +10,7 @@ import (
 )
 
 func createTestEntries(
-	users *[]models.User,
-	vaults *[]models.Vault,
-	t *testing.T,
-	db *gorm.DB,
+	users *[]models.User, vaults *[]models.Vault, t *testing.T, db *gorm.DB,
 ) (entries []models.Entry) {
 	entries = []models.Entry{
 		{
@@ -66,8 +63,14 @@ func createTestEntries(
 		},
 	}
 
-	if result := db.Create(&entries); result.Error != nil {
-		t.Fatalf("Create test entries failed: %s", result.Error.Error())
+	for _, entry := range entries {
+		if result := db.Create(&entry); result.Error != nil {
+			t.Fatalf("Create test entry failed: %s", result.Error.Error())
+		}
+	}
+
+	if result := db.Find(&entries); result.Error != nil {
+		t.Fatalf("Find test entries failed: %s", result.Error.Error())
 	}
 
 	return

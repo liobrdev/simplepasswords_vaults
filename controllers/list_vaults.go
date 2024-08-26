@@ -20,7 +20,8 @@ func (H Handler) ListVaults(c *fiber.Ctx) error {
 
 	var vaults []models.Vault
 
-	if result := H.DB.Find(&vaults, "user_slug = ?", slug); result.Error != nil {
+	if result := H.DB.Order("created_at DESC").Find(&vaults, "user_slug = ?", slug);
+	result.Error != nil {
 		return utils.RespondWithError(
 			c, 500, utils.ListVaults, utils.ErrorFailedDB, result.Error.Error(),
 		)

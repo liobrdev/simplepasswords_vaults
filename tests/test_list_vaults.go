@@ -67,6 +67,9 @@ func testListVaultsSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *conf
 		}
 
 		require.ElementsMatch(t, vaultsJSON, listVaultsRespBody.Vaults)
+		require.True(
+			t, listVaultsRespBody.Vaults[0].CreatedAt.After(listVaultsRespBody.Vaults[1].CreatedAt),
+		)
 	}
 }
 

@@ -20,7 +20,9 @@ func (H Handler) RetrieveVault(c *fiber.Ctx) error {
 
 	var vault models.Vault
 
-	if result := H.DB.Preload("Entries").First(&vault, "slug = ?", slug); result.Error != nil {
+	if result := H.DB.Preload("Entries", func(db *gorm.DB) *gorm.DB {
+		return db.Order("entries.created_at DESC")
+	}).First(&vault, "slug = ?", slug); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return utils.RespondWithError(c, 404, utils.RetrieveVault, utils.ErrorNotFound, slug)
 		}

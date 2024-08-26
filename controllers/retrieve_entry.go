@@ -20,7 +20,9 @@ func (H Handler) RetrieveEntry(c *fiber.Ctx) error {
 
 	var entry models.Entry
 
-	if result := H.DB.Preload("Secrets").First(&entry, "slug = ?", slug); result.Error != nil {
+	if result := H.DB.Preload("Secrets", func(db *gorm.DB) *gorm.DB {
+		return db.Order("secrets.priority, secrets.created_at")
+	}).First(&entry, "slug = ?", slug); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return utils.RespondWithError(c, 404, utils.RetrieveEntry, utils.ErrorNotFound, slug)
 		}

@@ -48,7 +48,7 @@ func testRetrieveVaultClientError(
 }
 
 func testRetrieveVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
-	setup.SetUpWithData(t, db)
+	_, _, entries, _ := setup.SetUpWithData(t, db)
 
 	var expectedVault models.Vault
 	helpers.QueryTestVault(t, db, &expectedVault, "vault@0.1.*.*")
@@ -65,10 +65,19 @@ func testRetrieveVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *c
 			t.Fatalf("JSON unmarshal failed: %s", err.Error())
 		}
 
+		var entriesJSON []models.Entry
+
+		if entriesBytes, err := json.Marshal(entries[2:4]); err != nil {
+			t.Fatalf("JSON marshal failed: %s", err.Error())
+		} else if err := json.Unmarshal(entriesBytes, &entriesJSON); err != nil {
+			t.Fatalf("JSON unmarshal failed: %s", err.Error())
+		}
+
 		require.Equal(t, expectedVault.Slug, actualVault.Slug)
 		require.Equal(t, expectedVault.Title, actualVault.Title)
 		require.Equal(t, "vault@0.1.*.*", actualVault.Title)
-		require.Len(t, actualVault.Entries, 2)
+		require.ElementsMatch(t, entriesJSON, actualVault.Entries)
+		require.True(t, actualVault.Entries[0].CreatedAt.After(actualVault.Entries[1].CreatedAt))
 	}
 }
 

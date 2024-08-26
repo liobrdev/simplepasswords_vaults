@@ -53,14 +53,10 @@ func testListVaultsSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *conf
 		t.Fatalf("Read response body failed: %s", err.Error())
 	} else {
 		var vaultsJSON []models.Vault
-		var vaultsBytes []byte
-		var err error
 
-		if vaultsBytes, err = json.Marshal(vaults[:2]); err != nil {
+		if vaultsBytes, err := json.Marshal(vaults[:2]); err != nil {
 			t.Fatalf("JSON marshal failed: %s", err.Error())
-		}
-		t.Log(string(vaultsBytes))
-		if err := json.Unmarshal(vaultsBytes, &vaultsJSON); err != nil {
+		} else if err := json.Unmarshal(vaultsBytes, &vaultsJSON); err != nil {
 			t.Fatalf("JSON unmarshal failed: %s", err.Error())
 		}
 

@@ -159,14 +159,8 @@ func createTestSecrets(
 		},
 	}
 
-	for _, secret := range secrets {
-		if result := db.Create(&secret); result.Error != nil {
-			t.Fatalf("Create test secret failed: %s", result.Error.Error())
-		}
-	}
-
-	if result := db.Find(&secrets); result.Error != nil {
-		t.Fatalf("Find test secrets failed: %s", result.Error.Error())
+	if result := db.Create(&secrets); result.Error != nil {
+		t.Fatalf("Create test secrets failed: %s", result.Error.Error())
 	}
 
 	return

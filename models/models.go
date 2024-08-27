@@ -42,7 +42,7 @@ type Secret struct {
 	UpdatedAt time.Time `json:"secret_updated_at" gorm:"autoUpdateTime:nano;not null"`
 	Label     string    `json:"secret_label" gorm:"uniqueIndex:unique_label_entry_slug;not null"`
 	String    string    `json:"secret_string" gorm:"not null"`
-	Priority	int8			`json:"secret_priority" gorm:"not null"`
+	Priority	uint8			`json:"secret_priority" gorm:"not null"`
 	EntrySlug string    `json:"-" gorm:"uniqueIndex:unique_label_entry_slug;index;not null"`
 	Entry     Entry     `json:"-" gorm:"foreignKey:EntrySlug;constraint:OnDelete:CASCADE"`
 	VaultSlug string    `json:"-" gorm:"not null"`

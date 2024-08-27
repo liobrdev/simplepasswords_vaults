@@ -181,7 +181,8 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 	t.Run("empty_item_in_secrets_body_400_bad_request", func(t *testing.T) {
 		secretsStr := `[{` +
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
-			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":0` +
 			`},{}]`
 
 		testCreateEntryClientError(
@@ -193,9 +194,11 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 	t.Run("missing_secret_label_item_in_secrets_body_400_bad_request", func(t *testing.T) {
 		secretsStr := `[{` +
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
-			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority": 0` +
 			`},{` +
-			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1"` +
+			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
+			`"secret_priority":1` +
 			`}]`
 
 		testCreateEntryClientError(
@@ -207,9 +210,11 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 	t.Run("missing_secret_string_item_in_secrets_body_400_bad_request", func(t *testing.T) {
 		secretsStr := "[{" +
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
-			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":0` +
 			`},{` +
-			`"secret_label":"secret[_label='password']@0.0.2.1"` +
+			`"secret_label":"secret[_label='password']@0.0.2.1",` +
+			`"secret_priority":1` +
 			`}]`
 
 		testCreateEntryClientError(
@@ -221,10 +226,12 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 	t.Run("empty_secret_label_item_in_secrets_body_400_bad_request", func(t *testing.T) {
 		secretsStr := `[{` +
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
-			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":0` +
 			`},{` +
 			`"secret_label":"",` +
-			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1"` +
+			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
+			`"secret_priority":1` +
 			`}]`
 
 		testCreateEntryClientError(
@@ -236,10 +243,12 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 	t.Run("empty_secret_string_item_in_secrets_body_400_bad_request", func(t *testing.T) {
 		secretsStr := `[{` +
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
-			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":0` +
 			`},{` +
 			`"secret_label":"secret[_label='password']@0.0.2.1",` +
-			`"secret_string":""` +
+			`"secret_string":"",` +
+			`"secret_priority":1` +
 			`}]`
 
 		testCreateEntryClientError(
@@ -254,10 +263,12 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 		} else {
 			secretsStr := `[{` +
 				`"secret_label":"secret[_label='username']@0.0.2.0",` +
-				`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+				`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+				`"secret_priority":0` +
 				`},{` +
 				fmt.Sprintf(`"secret_label":"%s",`, label) +
-				`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1"` +
+				`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
+				`"secret_priority":1` +
 				`}]`
 
 			testCreateEntryClientError(
@@ -273,10 +284,12 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 		} else {
 			secretsStr := `[{` +
 				`"secret_label":"secret[_label='username']@0.0.2.0",` +
-				`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+				`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+				`"secret_priority":0` +
 				`},{` +
 				`"secret_label":"secret[_label='password']@0.0.2.1",` +
-				fmt.Sprintf(`"secret_string":"%s"`, str) +
+				fmt.Sprintf(`"secret_string":"%s",`, str) +
+				`"secret_priority":1` +
 				`}]`
 
 			testCreateEntryClientError(
@@ -294,10 +307,12 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 
 		secretsStr := `[{` +
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
-			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":0` +
 			`},{` +
 			`"secret_label":"secret[_label='password']@0.0.2.1",` +
-			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1"` +
+			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
+			`"secret_priority":1` +
 			`}]`
 
 		body := fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entryTitle, secretsStr)
@@ -313,10 +328,12 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 
 		secretsStr := `[{` +
 			fmt.Sprintf(`"secret_label":"%s",`, secretLabel) +
-			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":0` +
 			`},{` +
 			fmt.Sprintf(`"secret_label":"%s",`, secretLabel) +
-			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1"` +
+			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
+			`"secret_priority":1` +
 			`}]`
 
 		body := fmt.Sprintf(
@@ -324,7 +341,27 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 		)
 
 		testCreateEntryClientError(
-			t, app, conf, 400, utils.ErrorDuplicateSecrets, secretLabel, body,
+			t, app, conf, 400, utils.ErrorDuplicateSecretsLabel, secretLabel, body,
+		)
+	})
+
+	t.Run("valid_body_entry_secret_priority_duplicate_400_bad_request", func(t *testing.T) {
+		secretsStr := `[{` +
+			`"secret_label":"secret[_label='username']@0.0.2.0",` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":1` +
+			`},{` +
+			`"secret_label":"secret[_label='password']@0.0.2.1",` +
+			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
+			`"secret_priority":1` +
+			`}]`
+
+		body := fmt.Sprintf(
+			bodyFmt, helpers.NewSlug(t), helpers.NewSlug(t), "entry@0.0.2.*", secretsStr,
+		)
+
+		testCreateEntryClientError(
+			t, app, conf, 400, utils.ErrorDuplicateSecretsPriority, "", body,
 		)
 	})
 
@@ -345,10 +382,12 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 
 		secretsStr := `[{` +
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
-			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0"` +
+			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":0` +
 			`},{` +
 			`"secret_label":"secret[_label='password']@0.0.2.1",` +
-			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1"` +
+			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
+			`"secret_priority":1` +
 			`}]`
 
 		body := fmt.Sprintf(bodyFmt, userSlug, vault.Slug, entryTitle, secretsStr)
@@ -376,11 +415,13 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 		secretsStr := `[{` +
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
 			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
+			`"secret_priority":0,` +
 			`"secret_slug":"notEvenARealSlug_0",` +
 			`"secret_created_at":"10/12/22"` +
 			`},{` +
 			`"secret_label":"secret[_label='password']@0.0.2.1",` +
 			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
+			`"secret_priority":1,` +
 			`"secret_slug":"notEvenARealSlug_1",` +
 			`"secret_created_at":"10/12/22"` +
 			`}]`
@@ -438,8 +479,10 @@ func testCreateEntrySuccess(
 	helpers.QueryTestSecretsByEntry(t, db, &secrets, entry.Slug)
 	require.Equal(t, "secret[_label='username']@0.0.2.0", secrets[0].Label)
 	require.Equal(t, "secret[_string='foodeater1234']@0.0.2.0", secrets[0].String)
+	require.EqualValues(t, 0, secrets[0].Priority)
 	require.Equal(t, "secret[_label='password']@0.0.2.1", secrets[1].Label)
 	require.Equal(t, "secret[_string='3a7!ng40oD']@0.0.2.1", secrets[1].String)
+	require.EqualValues(t, 1, secrets[1].Priority)
 
 	helpers.CountEntries(t, db, &entryCount)
 	require.EqualValues(t, 9, entryCount)

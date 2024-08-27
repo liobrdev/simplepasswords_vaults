@@ -11,8 +11,9 @@ import (
 )
 
 type reqBodySecret struct {
-	Label  string `json:"secret_label"`
-	String string `json:"secret_string"`
+	Label  	 string	`json:"secret_label"`
+	String 	 string	`json:"secret_string"`
+	Priority uint8 	`json:"secret_priority"`
 }
 
 type CreateEntryRequestBody struct {
@@ -51,6 +52,7 @@ func (H Handler) CreateEntry(c *fiber.Ctx) error {
 
 	secretsLen := len(body.Secrets)
 	labels := map[string]bool{}
+	priorities := map[uint8]bool{}
 
 	for i, secret := range(body.Secrets) {
 		if secret.Label == "" || len(secret.Label) > 255 {
@@ -69,11 +71,18 @@ func (H Handler) CreateEntry(c *fiber.Ctx) error {
 
 		if _, ok := labels[secret.Label]; ok {
 			return utils.RespondWithError(
-				c, 400, utils.CreateEntry, utils.ErrorDuplicateSecrets, secret.Label,
+				c, 400, utils.CreateEntry, utils.ErrorDuplicateSecretsLabel, secret.Label,
+			)
+		}
+
+		if _, ok := priorities[secret.Priority]; ok {
+			return utils.RespondWithError(
+				c, 400, utils.CreateEntry, utils.ErrorDuplicateSecretsPriority, "",
 			)
 		}
 
 		labels[secret.Label] = true
+		priorities[secret.Priority] = true
 	}
 
 	var entry models.Entry
@@ -103,6 +112,7 @@ func (H Handler) CreateEntry(c *fiber.Ctx) error {
 					Slug:      slug,
 					Label:     secret.Label,
 					String:    secret.String,
+					Priority:	 secret.Priority,
 					EntrySlug: entry.Slug,
 					VaultSlug: entry.VaultSlug,
 					UserSlug:  entry.UserSlug,

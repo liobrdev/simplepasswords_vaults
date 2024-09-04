@@ -8,11 +8,12 @@ import (
 )
 
 type CreateSecretRequestBody struct {
-	UserSlug     string `json:"user_slug"`
-	VaultSlug    string `json:"vault_slug"`
-	EntrySlug    string `json:"entry_slug"`
-	SecretLabel  string `json:"secret_label"`
-	SecretString string `json:"secret_string"`
+	UserSlug			 string `json:"user_slug"`
+	VaultSlug			 string `json:"vault_slug"`
+	EntrySlug			 string `json:"entry_slug"`
+	SecretLabel		 string `json:"secret_label"`
+	SecretString	 string `json:"secret_string"`
+	SecretPriority uint8	`json:"secret_priority"`
 }
 
 func (H Handler) CreateSecret(c *fiber.Ctx) error {
@@ -65,6 +66,7 @@ func (H Handler) CreateSecret(c *fiber.Ctx) error {
 	secret.EntrySlug = body.EntrySlug
 	secret.Label = body.SecretLabel
 	secret.String = body.SecretString
+	secret.Priority = body.SecretPriority
 
 	if result := H.DB.Create(&secret); result.Error != nil {
 		return utils.RespondWithError(

@@ -10,6 +10,7 @@ const (
 	ErrorSecretSlug        				string = "Invalid `secret_slug`."
 	ErrorSecretLabel       				string = "Invalid `secret_label`."
 	ErrorSecretString      				string = "Invalid `secret_string`."
+	ErrorSecretPriority						string = "Invalid `secret_priority`."
 	ErrorEmptyUpdateSecret 				string = "Empty 'update_secret' body."
 	ErrorSecrets           				string = "Invalid `secrets`."
 	ErrorItemSecrets       				string = "Invalid item in `secrets`."

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/liobrdev/simplepasswords_vaults/config"
+	"github.com/liobrdev/simplepasswords_vaults/models"
 	"github.com/liobrdev/simplepasswords_vaults/tests/helpers"
 	"github.com/liobrdev/simplepasswords_vaults/tests/setup"
 	"github.com/liobrdev/simplepasswords_vaults/utils"
@@ -18,10 +19,8 @@ import (
 
 func testDeleteSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	t.Run("valid_slug_404_not_found", func(t *testing.T) {
-		testDeleteSecretClientError(
-			t, app, conf, 404, utils.ErrorNoRowsAffected, "Likely that slug was not found.",
-			helpers.NewSlug(t),
-		)
+		slug := helpers.NewSlug(t)
+		testDeleteSecretClientError(t, app, conf, 404, utils.ErrorNotFound, slug, slug)
 	})
 
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
@@ -49,11 +48,15 @@ func testDeleteSecretClientError(
 
 func testDeleteSecretSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	_, _, _, secrets := setup.SetUpWithData(t, db)
-	secret := secrets[0]
+	secret := secrets[16]
 
 	var secretCount int64
 	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 16, secretCount)
+	require.EqualValues(t, 20, secretCount)
+
+	var secretsBeforeDelete []models.Secret
+	helpers.QueryTestSecretsByEntry(t, db, &secretsBeforeDelete, secret.EntrySlug)
+	require.Equal(t, 7, len(secretsBeforeDelete))
 
 	resp := newRequestDeleteSecret(t, app, conf, secret.Slug)
 	require.Equal(t, 204, resp.StatusCode)
@@ -64,14 +67,32 @@ func testDeleteSecretSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *co
 		require.Empty(t, respBody)
 	}
 
-	if result := db.First(&secret, "slug = ?", secret.Slug); result.Error != nil {
-		require.ErrorIs(t, result.Error, gorm.ErrRecordNotFound)
-	} else {
-		t.Fatalf("Deleted secret query failed: %s", result.Error.Error())
+	helpers.CountSecrets(t, db, &secretCount)
+	require.EqualValues(t, 19, secretCount)
+
+	var secretsAfterDelete []models.Secret
+	helpers.QueryTestSecretsByEntry(t, db, &secretsAfterDelete, secret.EntrySlug)
+	require.Equal(t, 6, len(secretsAfterDelete))
+
+	for _, newSecret := range secretsAfterDelete {
+		require.NotEqual(t, secret.Slug, newSecret.Slug)
+
+		for _, oldSecret := range secretsBeforeDelete {
+			if newSecret.Slug == oldSecret.Slug {
+				if oldSecret.Priority > secret.Priority {
+					require.Equal(t, oldSecret.Priority - 1, newSecret.Priority)
+					require.True(t, newSecret.UpdatedAt.After(oldSecret.UpdatedAt))
+				} else {
+					require.Equal(t, oldSecret.Priority, newSecret.Priority)
+					require.Equal(t, oldSecret.UpdatedAt, newSecret.UpdatedAt)
+				}
+			}
+		}
 	}
 
-	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 15, secretCount)
+	result := db.First(&secret, "slug = ?", secret.Slug)
+	require.NotNil(t, result.Error)
+	require.ErrorIs(t, result.Error, gorm.ErrRecordNotFound)
 }
 
 func newRequestDeleteSecret(

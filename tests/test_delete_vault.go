@@ -87,7 +87,7 @@ func testDeleteVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *con
 
 	var secretCount int64
 	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 16, secretCount)
+	require.EqualValues(t, 20, secretCount)
 
 	resp := newRequestDeleteVault(t, app, conf, vault.Slug)
 	require.Equal(t, 204, resp.StatusCode)
@@ -147,7 +147,7 @@ func testDeleteVaultSuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *con
 	require.EqualValues(t, 6, entryCount)
 
 	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 12, secretCount)
+	require.EqualValues(t, 16, secretCount)
 }
 
 func newRequestDeleteVault(

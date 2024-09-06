@@ -13,7 +13,6 @@ type CreateSecretRequestBody struct {
 	EntrySlug			 string `json:"entry_slug"`
 	SecretLabel		 string `json:"secret_label"`
 	SecretString	 string `json:"secret_string"`
-	SecretPriority uint8	`json:"secret_priority"`
 }
 
 func (H Handler) CreateSecret(c *fiber.Ctx) error {
@@ -61,12 +60,22 @@ func (H Handler) CreateSecret(c *fiber.Ctx) error {
 		secret.Slug = secretSlug
 	}
 
+	var count int64
+
+	if result := H.DB.Model(&models.Secret{}).Where("entry_slug = ?", body.EntrySlug).Count(&count);
+	result.Error != nil {
+		return utils.RespondWithError(
+			c, 500, utils.CreateSecret, utils.ErrorFailedDB, result.Error.Error(),
+		)
+	} else {
+		secret.Priority = uint8(count)
+	}
+
 	secret.UserSlug = body.UserSlug
 	secret.VaultSlug = body.VaultSlug
 	secret.EntrySlug = body.EntrySlug
 	secret.Label = body.SecretLabel
 	secret.String = body.SecretString
-	secret.Priority = body.SecretPriority
 
 	if result := H.DB.Create(&secret); result.Error != nil {
 		return utils.RespondWithError(

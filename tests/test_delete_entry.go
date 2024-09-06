@@ -68,7 +68,7 @@ func testDeleteEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *con
 
 	var secretCount int64
 	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 16, secretCount)
+	require.EqualValues(t, 20, secretCount)
 
 	resp := newRequestDeleteEntry(t, app, conf, entry.Slug)
 	require.Equal(t, 204, resp.StatusCode)
@@ -101,7 +101,7 @@ func testDeleteEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *con
 	require.EqualValues(t, 7, entryCount)
 
 	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 14, secretCount)
+	require.EqualValues(t, 18, secretCount)
 }
 
 func newRequestDeleteEntry(

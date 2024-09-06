@@ -25,8 +25,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 		`"vault_slug":"%s",` +
 		`"entry_slug":"%s",` +
 		`"secret_label":"%s",` +
-		`"secret_string":"%s",` +
-		`"secret_priority":%d` +
+		`"secret_string":"%s"` +
 		`}`
 
 	dummySlug := helpers.NewSlug(t)
@@ -51,7 +50,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 
 		testCreateSecretClientError(
 			t, app, conf, 400, utils.ErrorParse, "invalid character '[' looking for beginning of value",
-			fmt.Sprintf("[" + bodyFmt + "]", dummySlug, dummySlug, dummySlug, "abc", "123", 0),
+			fmt.Sprintf("[" + bodyFmt + "]", dummySlug, dummySlug, dummySlug, "abc", "123"),
 		)
 	})
 
@@ -90,8 +89,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":"%s",` +
 					`"entry_slug":"%s",` +
 					`"secret_label":"%s",` +
-					`"secret_string":"%s",` +
-					`"secret_priority":0` +
+					`"secret_string":"%s"` +
 					`}`,
 				dummySlug, dummySlug, "abc", "123",
 			),
@@ -106,8 +104,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vualt_slug":"Spelled wrong!",` +
 					`"entry_slug":"%s",` +
 					`"secret_label":"%s",` +
-					`"secret_string":"%s",` +
-					`"secret_priority":0` +
+					`"secret_string":"%s"` +
 					`}`,
 				dummySlug, dummySlug, "abc", "123",
 			),
@@ -122,8 +119,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":"%s",` +
 					`"enry_slug":"Spelled wrong!",` +
 					`"secret_label":"%s",` +
-					`"secret_string":"%s",` +
-					`"secret_priority":0` +
+					`"secret_string":"%s"` +
 					`}`,
 				dummySlug, dummySlug, "abc", "123",
 			),
@@ -138,8 +134,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":"%s",` +
 					`"entry_slug":"%s",` +
 					`"secret_labl":"Spelled wrong!",` +
-					`"secret_string":"%s",` +
-					`"secret_priority":0` +
+					`"secret_string":"%s"` +
 					`}`,
 				dummySlug, dummySlug, dummySlug, "123",
 			),
@@ -154,8 +149,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":"%s",` +
 					`"entry_slug":"%s",` +
 					`"secret_label":"%s",` +
-					`"secret_strng":"Spelled wrong!",` +
-					`"secret_priority":0` +
+					`"secret_strng":"Spelled wrong!"` +
 					`}`,
 				dummySlug, dummySlug, dummySlug, "abc",
 			),
@@ -170,8 +164,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":"%s",` +
 					`"entry_slug":"%s",` +
 					`"secret_label":"%s",` +
-					`"secret_string":"%s",` +
-					`"secret_priority":0` +
+					`"secret_string":"%s"` +
 					`}`,
 				dummySlug, dummySlug, "abc", "123",
 			),
@@ -186,8 +179,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":null,` +
 					`"entry_slug":"%s",` +
 					`"secret_label":"%s",` +
-					`"secret_string":"%s",` +
-					`"secret_priority":0` +
+					`"secret_string":"%s"` +
 					`}`,
 				dummySlug, dummySlug, "abc", "123",
 			),
@@ -202,8 +194,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":"%s",` +
 					`"entry_slug":null,` +
 					`"secret_label":"%s",` +
-					`"secret_string":"%s",` +
-					`"secret_priority":0` +
+					`"secret_string":"%s"` +
 					`}`,
 				dummySlug, dummySlug, "abc", "123",
 			),
@@ -218,8 +209,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":"%s",` +
 					`"entry_slug":"%s",` +
 					`"secret_label":null,` +
-					`"secret_string":"%s",` +
-					`"secret_priority":0` +
+					`"secret_string":"%s"` +
 					`}`,
 				dummySlug, dummySlug, dummySlug, "123",
 			),
@@ -234,8 +224,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 					`"vault_slug":"%s",` +
 					`"entry_slug":"%s",` +
 					`"secret_label":"%s",` +
-					`"secret_string":null,` +
-					`"secret_priority":0` +
+					`"secret_string":null` +
 					`}`,
 				dummySlug, dummySlug, dummySlug, "abc",
 			),
@@ -245,35 +234,35 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 	t.Run("empty_user_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
 			t, app, conf, 400, utils.ErrorUserSlug, "",
-			fmt.Sprintf(bodyFmt, "", dummySlug, dummySlug, "abc", "123", 0),
+			fmt.Sprintf(bodyFmt, "", dummySlug, dummySlug, "abc", "123"),
 		)
 	})
 
 	t.Run("empty_vault_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
 			t, app, conf, 400, utils.ErrorVaultSlug, "",
-			fmt.Sprintf(bodyFmt, dummySlug, "", dummySlug, "abc", "123", 0),
+			fmt.Sprintf(bodyFmt, dummySlug, "", dummySlug, "abc", "123"),
 		)
 	})
 
 	t.Run("empty_entry_slug_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
 			t, app, conf, 400, utils.ErrorEntrySlug, "",
-			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, "", "abc", "123", 0),
+			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, "", "abc", "123"),
 		)
 	})
 
 	t.Run("empty_secret_label_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
 			t, app, conf, 400, utils.ErrorSecretLabel, "",
-			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "", "123", 0),
+			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "", "123"),
 		)
 	})
 
 	t.Run("empty_secret_string_400_bad_request", func(t *testing.T) {
 		testCreateSecretClientError(
 			t, app, conf, 400, utils.ErrorSecretString, "",
-			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "abc", "", 0),
+			fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "abc", ""),
 		)
 	})
 
@@ -283,7 +272,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 		} else {
 			testCreateSecretClientError(
 				t, app, conf, 400, utils.ErrorSecretLabel, "Too long",
-				fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, label, "123", 0),
+				fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, label, "123"),
 			)
 		}
 	})
@@ -294,7 +283,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 		} else {
 			testCreateSecretClientError(
 				t, app, conf, 400, utils.ErrorSecretString, "Too long",
-				fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "abc", str, 0),
+				fmt.Sprintf(bodyFmt, dummySlug, dummySlug, dummySlug, "abc", str),
 			)
 		}
 	})
@@ -308,20 +297,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 		testCreateSecretClientError(
 			t, app, conf, 500, utils.ErrorFailedDB,
 			"UNIQUE constraint failed: secrets.label, secrets.entry_slug",
-			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, secrets[7].Label, "123", 2),
-		)
-	})
-
-	t.Run("valid_body_secret_priority_already_exists_500_error", func(t *testing.T) {
-		users, vaults, entries, secrets := setup.SetUpWithData(t, db)
-		userSlug := users[0].Slug
-		vaultSlug := vaults[1].Slug
-		entrySlug := entries[3].Slug
-
-		testCreateSecretClientError(
-			t, app, conf, 500, utils.ErrorFailedDB,
-			"UNIQUE constraint failed: secrets.priority, secrets.entry_slug",
-			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, "abc", "123", secrets[7].Priority),
+			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, secrets[7].Label, "123"),
 		)
 	})
 
@@ -335,7 +311,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 
 		testCreateSecretSuccess(
 			t, app, db, conf, 2, secretLabel, secretString,
-			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, secretLabel, secretString, 2),
+			fmt.Sprintf(bodyFmt, userSlug, vaultSlug, entrySlug, secretLabel, secretString),
 		)
 	})
 
@@ -354,11 +330,10 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 				`"entry_slug":"%s",`+
 				`"secret_label":"%s",`+
 				`"secret_string":"%s",`+
-				`"secret_priority":%d,`+
 				`"secret_slug":"notEvenARealSlug",`+
 				`"secret_created_at":"10/12/22"`+
 				`}`,
-			userSlug, vaultSlug, entrySlug, secretLabel, secretString, 2,
+			userSlug, vaultSlug, entrySlug, secretLabel, secretString,
 		)
 
 		testCreateSecretSuccess(t, app, db, conf, 2, secretLabel, secretString, validBodyIrrelevantData)
@@ -385,7 +360,7 @@ func testCreateSecretSuccess(
 ) {
 	var secretCount int64
 	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 16, secretCount)
+	require.EqualValues(t, 20, secretCount)
 
 	resp := newRequestCreateSecret(t, app, conf, body)
 	require.Equal(t, 204, resp.StatusCode)
@@ -404,7 +379,7 @@ func testCreateSecretSuccess(
 	require.Equal(t, secretString, secret.String)
 	require.Equal(t, secretPriority, secret.Priority)
 	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 17, secretCount)
+	require.EqualValues(t, 21, secretCount)
 }
 
 func newRequestCreateSecret(

@@ -457,7 +457,7 @@ func testCreateEntrySuccess(
 	userSlug, vaultSlug, entryTitle, body string,
 ) {
 	require.EqualValues(t, 8, entryCount)
-	require.EqualValues(t, 16, secretCount)
+	require.EqualValues(t, 20, secretCount)
 
 	resp := newRequestCreateEntry(t, app, conf, body)
 	require.Equal(t, 204, resp.StatusCode)
@@ -487,7 +487,7 @@ func testCreateEntrySuccess(
 	helpers.CountEntries(t, db, &entryCount)
 	require.EqualValues(t, 9, entryCount)
 	helpers.CountSecrets(t, db, &secretCount)
-	require.EqualValues(t, 18, secretCount)
+	require.EqualValues(t, 22, secretCount)
 }
 
 func newRequestCreateEntry(

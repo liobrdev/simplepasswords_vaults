@@ -10,11 +10,17 @@ import (
 )
 
 type UpdateSecretRequestBody struct {
-	Label  string `json:"secret_label"`
-	String string `json:"secret_string"`
+	Label		 	string `json:"secret_label"`
+	String	 	string `json:"secret_string"`
+	Priority 	string `json:"secret_priority"`
+	EntrySlug string `json:"entry_slug"`
 }
 
 func (H Handler) UpdateSecret(c *fiber.Ctx) error {
+	if clientOperation := c.Get("Client-Operation"); clientOperation == utils.MoveSecret {
+		return c.Next()
+	}
+
 	body := UpdateSecretRequestBody{}
 
 	if err := c.BodyParser(&body); err != nil {

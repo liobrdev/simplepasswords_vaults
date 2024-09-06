@@ -1,9 +1,11 @@
 package controllers
 
 import (
-	"fmt"
+	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 
 	"github.com/liobrdev/simplepasswords_vaults/models"
 	"github.com/liobrdev/simplepasswords_vaults/utils"
@@ -18,18 +20,42 @@ func (H Handler) DeleteSecret(c *fiber.Ctx) error {
 
 	var secret models.Secret
 
-	if result := H.DB.Delete(&secret, "slug = ?", slug); result.Error != nil {
+	if result := H.DB.First(&secret, "slug = ?", slug); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return utils.RespondWithError(c, 404, utils.DeleteSecret, utils.ErrorNotFound, slug)
+		}
+
 		return utils.RespondWithError(
 			c, 500, utils.DeleteSecret, utils.ErrorFailedDB, result.Error.Error(),
 		)
-	} else if n := result.RowsAffected; n == 0 {
+	}
+
+	var secrets []string
+
+	if result := H.DB.Raw(
+		"SELECT slug FROM secrets WHERE entry_slug = ? AND priority > ?",
+		secret.EntrySlug, secret.Priority,
+	).Scan(&secrets); result.Error != nil {
 		return utils.RespondWithError(
-			c, 404, utils.DeleteSecret, utils.ErrorNoRowsAffected, "Likely that slug was not found.",
+			c, 500, utils.DeleteSecret, utils.ErrorFailedDB, result.Error.Error(),
 		)
-	} else if n > 1 {
-		return utils.RespondWithError(
-			c, 500, utils.DeleteSecret, fmt.Sprintf("result.RowsAffected (%d) > 1", n), "",
-		)
+	}
+
+	if err := H.DB.Transaction(func(tx *gorm.DB) error {
+		if result := tx.Exec(
+			"UPDATE secrets SET priority = ?, updated_at = ? WHERE slug IN ?",
+			gorm.Expr("priority - 1"), time.Now().UTC(), secrets,
+		); result.Error != nil {
+			return result.Error
+		}
+
+		if result := tx.Delete(&secret); result.Error != nil {
+			return result.Error
+		}
+
+		return nil
+	}); err != nil {
+		return utils.RespondWithError(c, 500, utils.MoveSecret, utils.ErrorFailedDB, err.Error())
 	}
 
 	return c.SendStatus(204)

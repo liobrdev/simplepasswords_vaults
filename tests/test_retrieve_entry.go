@@ -48,41 +48,46 @@ func testRetrieveEntryClientError(
 }
 
 func testRetrieveEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
-	_, _, _, secrets := setup.SetUpWithData(t, db)
+	setup.SetUpWithData(t, db)
 
-	var expectedEntry models.Entry
-	helpers.QueryTestEntry(t, db, &expectedEntry, "entry@0.1.1.*")
+	var entryFromDB models.Entry
+	helpers.QueryTestEntryEager(t, db, &entryFromDB, "entry@0.1.1.*")
 
-	resp := newRequestRetrieveEntry(t, app, conf, expectedEntry.Slug)
+	resp := newRequestRetrieveEntry(t, app, conf, entryFromDB.Slug)
 	require.Equal(t, 200, resp.StatusCode)
 
 	if respBody, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatalf("Read response body failed: %s", err.Error())
 	} else {
-		var actualEntry models.Entry
+		var respEntry models.Entry
 
-		if err := json.Unmarshal(respBody, &actualEntry); err != nil {
+		if err := json.Unmarshal(respBody, &respEntry); err != nil {
 			t.Fatalf("JSON unmarshal failed: %s", err.Error())
 		}
 
-		require.Equal(t, expectedEntry.Slug, actualEntry.Slug)
-		require.Equal(t, expectedEntry.Title, actualEntry.Title)
-		require.Equal(t, "entry@0.1.1.*", actualEntry.Title)
+		require.Equal(t, entryFromDB.Slug, respEntry.Slug)
+		require.Equal(t, entryFromDB.Title, respEntry.Title)
+		require.Equal(t, "entry@0.1.1.*", respEntry.Title)
 
-		var secretsJSON []models.Secret
-
-		if secretsBytes, err := json.Marshal(secrets[6:8]); err != nil {
-			t.Fatalf("JSON marshal failed: %s", err.Error())
-		} else if err := json.Unmarshal(secretsBytes, &secretsJSON); err != nil {
-			t.Fatalf("JSON unmarshal failed: %s", err.Error())
+		if plaintext, err := utils.Decrypt(entryFromDB.Secrets[0].String, helpers.HexHash[:64]);
+		err != nil {
+			t.Fatalf("Password decryption failed: %s", err.Error())
+		} else {
+			require.Equal(t, "secret[_string='foodeater1234']@0.1.1.0", plaintext)
+			require.Equal(t, plaintext, respEntry.Secrets[0].String)
+			require.Equal(t, "secret[_label='username']@0.1.1.0", respEntry.Secrets[0].Label)
+			require.EqualValues(t, 0, respEntry.Secrets[0].Priority)
 		}
 
-		require.ElementsMatch(t, secretsJSON, actualEntry.Secrets)
-		require.Less(t, actualEntry.Secrets[0].Priority, actualEntry.Secrets[1].Priority)
-		require.Equal(t, "secret[_label='username']@0.1.1.0", actualEntry.Secrets[0].Label)
-		require.Equal(t, "secret[_string='foodeater1234']@0.1.1.0", actualEntry.Secrets[0].String)
-		require.Equal(t, "secret[_label='password']@0.1.1.1", actualEntry.Secrets[1].Label)
-		require.Equal(t, "secret[_string='3a7!ng40oD']@0.1.1.1", actualEntry.Secrets[1].String)
+		if plaintext, err := utils.Decrypt(entryFromDB.Secrets[1].String, helpers.HexHash[:64]);
+		err != nil {
+			t.Fatalf("Password decryption failed: %s", err.Error())
+		} else {
+			require.Equal(t, "secret[_string='3a7!ng40oD']@0.1.1.1", plaintext)
+			require.Equal(t, plaintext, respEntry.Secrets[1].String)
+			require.Equal(t, "secret[_label='password']@0.1.1.1", respEntry.Secrets[1].Label)
+			require.EqualValues(t, 1, respEntry.Secrets[1].Priority)
+		}
 	}
 }
 
@@ -94,8 +99,9 @@ func newRequestRetrieveEntry(
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Client-Operation", utils.RetrieveEntry)
 	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+	req.Header.Set(conf.PASSWORD_HEADER_KEY, helpers.HexHash[:64])
 
-	resp, err := app.Test(req)
+	resp, err := app.Test(req, -1)
 
 	if err != nil {
 		t.Fatalf("Send test request failed: %s", err.Error())

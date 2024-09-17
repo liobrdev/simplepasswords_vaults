@@ -104,21 +104,23 @@ func (H Handler) CreateEntry(c *fiber.Ctx) error {
 			return result.Error
 		}
 
+		password := c.Get(H.Conf.PASSWORD_HEADER_KEY)
+
 		for _, secret := range(body.Secrets) {
 			if slug, err := utils.GenerateSlug(32); err != nil {
 				return fmt.Errorf("`secret.Slug` generation failed: %s", err.Error())
-			} else {
-				if result := tx.Create(&models.Secret{
-					Slug:      slug,
-					Label:     secret.Label,
-					String:    secret.String,
-					Priority:	 secret.Priority,
-					EntrySlug: entry.Slug,
-					VaultSlug: entry.VaultSlug,
-					UserSlug:  entry.UserSlug,
-				}); result.Error != nil {
-					return result.Error
-				}
+			} else if encryptedString, err := utils.Encrypt(secret.String, password); err != nil {
+				return fmt.Errorf("`secret.String` encryption failed: %s", err.Error())
+			} else if result := tx.Create(&models.Secret{
+				Slug:      slug,
+				Label:     secret.Label,
+				String:    encryptedString,
+				Priority:	 secret.Priority,
+				EntrySlug: entry.Slug,
+				VaultSlug: entry.VaultSlug,
+				UserSlug:  entry.UserSlug,
+			}); result.Error != nil {
+				return result.Error
 			}
 		}
 

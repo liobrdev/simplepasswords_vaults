@@ -19,6 +19,7 @@ func TestApp(t *testing.T) {
 		t.Fatal("Failed to load config from environment:", err)
 	}
 
+	conf.ENVIRONMENT = "testing"
 	conf.GO_TESTING_CONTEXT = t
 	app := app.CreateApp(&conf)
 	db := testDB.Init(&conf)

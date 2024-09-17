@@ -36,5 +36,19 @@ func (H Handler) RetrieveEntry(c *fiber.Ctx) error {
 		)
 	}
 
+	password := c.Get(H.Conf.PASSWORD_HEADER_KEY)
+	decryptedSecrets := []models.Secret{}
+
+	for _, secret := range entry.Secrets {
+		if decryptedString, err := utils.Decrypt(secret.String, password); err != nil {
+			return utils.RespondWithError(c, 500, utils.RetrieveEntry, utils.ErrorDecrypt, err.Error())
+		} else {
+			secret.String = decryptedString
+			decryptedSecrets = append(decryptedSecrets, secret)
+		}
+	}
+
+	entry.Secrets = decryptedSecrets
+
 	return c.Status(200).JSON(&entry)
 }

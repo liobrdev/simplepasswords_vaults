@@ -71,11 +71,18 @@ func (H Handler) CreateSecret(c *fiber.Ctx) error {
 		secret.Priority = uint8(count)
 	}
 
+	password := c.Get(H.Conf.PASSWORD_HEADER_KEY)
+
+	if encryptedString, err := utils.Encrypt(body.SecretString, password); err != nil {
+		return utils.RespondWithError(c, 500, utils.CreateSecret, utils.ErrorEncrypt, err.Error())
+	} else {
+		secret.String = encryptedString
+	}
+
+	secret.Label = body.SecretLabel
 	secret.UserSlug = body.UserSlug
 	secret.VaultSlug = body.VaultSlug
 	secret.EntrySlug = body.EntrySlug
-	secret.Label = body.SecretLabel
-	secret.String = body.SecretString
 
 	if result := H.DB.Create(&secret); result.Error != nil {
 		return utils.RespondWithError(

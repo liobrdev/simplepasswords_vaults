@@ -14,6 +14,7 @@ type AppConfig struct {
 	API_GATEWAY_HOST		string
 	API_GATEWAY_PORT		string
 	ENVIRONMENT					string
+	PASSWORD_HEADER_KEY	string
 	VAULTS_ACCESS_TOKEN	string
 	VAULTS_DB_HOST			string
 	VAULTS_DB_NAME			string
@@ -29,6 +30,7 @@ type envAbsPaths struct {
 	API_GATEWAY_HOST		string
 	API_GATEWAY_PORT		string
 	ENVIRONMENT					string
+	PASSWORD_HEADER_KEY	string
 	VAULTS_ACCESS_TOKEN	string
 	VAULTS_DB_HOST			string
 	VAULTS_DB_NAME			string

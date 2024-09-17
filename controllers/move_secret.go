@@ -12,8 +12,13 @@ import (
 	"github.com/liobrdev/simplepasswords_vaults/utils"
 )
 
+type MoveSecretRequestBody struct {
+	Priority 	string `json:"secret_priority"`
+	EntrySlug string `json:"entry_slug"`
+}
+
 func (H Handler) MoveSecret(c *fiber.Ctx) error {
-	body := UpdateSecretRequestBody{}
+	body := MoveSecretRequestBody{}
 
 	if err := c.BodyParser(&body); err != nil {
 		return utils.RespondWithError(c, 400, utils.MoveSecret, utils.ErrorParse, err.Error())

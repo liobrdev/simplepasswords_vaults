@@ -477,12 +477,22 @@ func testCreateEntrySuccess(
 
 	var secrets []models.Secret
 	helpers.QueryTestSecretsByEntry(t, db, &secrets, entry.Slug)
-	require.Equal(t, "secret[_label='username']@0.0.2.0", secrets[0].Label)
-	require.Equal(t, "secret[_string='foodeater1234']@0.0.2.0", secrets[0].String)
-	require.EqualValues(t, 0, secrets[0].Priority)
-	require.Equal(t, "secret[_label='password']@0.0.2.1", secrets[1].Label)
-	require.Equal(t, "secret[_string='3a7!ng40oD']@0.0.2.1", secrets[1].String)
-	require.EqualValues(t, 1, secrets[1].Priority)
+
+	if plaintext, err := utils.Decrypt(secrets[0].String, helpers.HexHash[:64]); err != nil {
+		t.Fatalf("Password decryption failed: %s", err.Error())
+	} else {
+		require.Equal(t, "secret[_string='foodeater1234']@0.0.2.0", plaintext)
+		require.Equal(t, "secret[_label='username']@0.0.2.0", secrets[0].Label)
+		require.EqualValues(t, 0, secrets[0].Priority)
+	}
+
+	if plaintext, err := utils.Decrypt(secrets[1].String, helpers.HexHash[:64]); err != nil {
+		t.Fatalf("Password decryption failed: %s", err.Error())
+	} else {
+		require.Equal(t, "secret[_string='3a7!ng40oD']@0.0.2.1", plaintext)
+		require.Equal(t, "secret[_label='password']@0.0.2.1", secrets[1].Label)
+		require.EqualValues(t, 1, secrets[1].Priority)
+	}
 
 	helpers.CountEntries(t, db, &entryCount)
 	require.EqualValues(t, 9, entryCount)
@@ -499,6 +509,8 @@ func newRequestCreateEntry(
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Client-Operation", utils.CreateEntry)
 	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+	req.Header.Set(conf.PASSWORD_HEADER_KEY, helpers.HexHash[:64])
+
 	resp, err := app.Test(req, -1)
 
 	if err != nil {

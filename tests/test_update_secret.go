@@ -208,7 +208,12 @@ func testUpdateSecretSuccess(
 	}
 
 	if updatedSecretString == "" {
-		updatedSecretString = secretBeforeUpdate.String
+		if plaintext, err := utils.Decrypt(secretBeforeUpdate.String, helpers.HexHash[:64]);
+		err != nil {
+			t.Fatalf("Password decryption failed: %s", err.Error())
+		} else {
+			updatedSecretString = plaintext
+		}
 	}
 
 	resp := newRequestUpdateSecret(t, app, conf, slug, body)
@@ -222,8 +227,15 @@ func testUpdateSecretSuccess(
 
 	var secretAfterUpdate models.Secret
 	helpers.QueryTestSecretBySlug(t, db, &secretAfterUpdate, slug)
+
+	if plaintext, err := utils.Decrypt(secretAfterUpdate.String, helpers.HexHash[:64]);
+	err != nil {
+		t.Fatalf("Password decryption failed: %s", err.Error())
+	} else {
+		require.Equal(t, updatedSecretString, plaintext)
+	}
+
 	require.Equal(t, updatedSecretLabel, secretAfterUpdate.Label)
-	require.Equal(t, updatedSecretString, secretAfterUpdate.String)
 	require.Equal(t, secretBeforeUpdate.CreatedAt, secretAfterUpdate.CreatedAt)
 	require.True(t, secretAfterUpdate.UpdatedAt.After(secretAfterUpdate.CreatedAt))
 	require.True(t, secretAfterUpdate.UpdatedAt.After(secretBeforeUpdate.UpdatedAt))
@@ -238,8 +250,9 @@ func newRequestUpdateSecret(
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Client-Operation", utils.UpdateSecret)
 	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+	req.Header.Set(conf.PASSWORD_HEADER_KEY, helpers.HexHash[:64])
 
-	resp, err := app.Test(req)
+	resp, err := app.Test(req, -1)
 
 	if err != nil {
 		t.Fatalf("Send test request failed: %s", err.Error())

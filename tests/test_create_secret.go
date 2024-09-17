@@ -374,10 +374,16 @@ func testCreateSecretSuccess(
 	var secret models.Secret
 	helpers.QueryTestSecretByLabel(t, db, &secret, secretLabel)
 
-	require.Equal(t, secret.CreatedAt, secret.UpdatedAt)
+	if plaintext, err := utils.Decrypt(secret.String, helpers.HexHash[:64]);
+	err != nil {
+		t.Fatalf("Password decryption failed: %s", err.Error())
+	} else {
+		require.Equal(t, secretString, plaintext)
+	}
+
 	require.Equal(t, secretLabel, secret.Label)
-	require.Equal(t, secretString, secret.String)
 	require.Equal(t, secretPriority, secret.Priority)
+	require.Equal(t, secret.CreatedAt, secret.UpdatedAt)
 	helpers.CountSecrets(t, db, &secretCount)
 	require.EqualValues(t, 21, secretCount)
 }
@@ -391,8 +397,9 @@ func newRequestCreateSecret(
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Client-Operation", utils.CreateSecret)
 	req.Header.Set("Authorization", "Token " + conf.VAULTS_ACCESS_TOKEN)
+	req.Header.Set(conf.PASSWORD_HEADER_KEY, helpers.HexHash[:64])
 
-	resp, err := app.Test(req)
+	resp, err := app.Test(req, -1)
 
 	if err != nil {
 		t.Fatalf("Send test request failed: %s", err.Error())

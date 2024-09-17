@@ -12,8 +12,6 @@ import (
 type UpdateSecretRequestBody struct {
 	Label		 	string `json:"secret_label"`
 	String	 	string `json:"secret_string"`
-	Priority 	string `json:"secret_priority"`
-	EntrySlug string `json:"entry_slug"`
 }
 
 func (H Handler) UpdateSecret(c *fiber.Ctx) error {
@@ -39,6 +37,16 @@ func (H Handler) UpdateSecret(c *fiber.Ctx) error {
 
 	if len(body.String) > 1000 {
 		return utils.RespondWithError(c, 400, utils.UpdateSecret, utils.ErrorSecretString, "Too long")
+	}
+
+	if body.String != "" {
+		password := c.Get(H.Conf.PASSWORD_HEADER_KEY)
+
+		var err error
+
+		if body.String, err = utils.Encrypt(body.String, password); err != nil {
+			return utils.RespondWithError(c, 500, utils.UpdateSecret, utils.ErrorEncrypt, err.Error())
+		}
 	}
 
 	slug := c.Params("slug")

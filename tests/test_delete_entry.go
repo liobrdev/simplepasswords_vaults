@@ -57,10 +57,20 @@ func testDeleteEntrySuccess(t *testing.T, app *fiber.App, db *gorm.DB, conf *con
 
 	secret1 := entry.Secrets[0]
 	secret2 := entry.Secrets[1]
-	require.Equal(t, "secret[_label='username']@0.1.1.0", secret1.Label)
-	require.Equal(t, "secret[_string='foodeater1234']@0.1.1.0", secret1.String)
-	require.Equal(t, "secret[_label='password']@0.1.1.1", secret2.Label)
-	require.Equal(t, "secret[_string='3a7!ng40oD']@0.1.1.1", secret2.String)
+
+	if plaintext, err := utils.Decrypt(secret1.String, helpers.HexHash[:64]); err != nil {
+		t.Fatalf("Password decryption failed: %s", err.Error())
+	} else {
+		require.Equal(t, "secret[_string='foodeater1234']@0.1.1.0", plaintext)
+		require.Equal(t, "secret[_label='username']@0.1.1.0", secret1.Label)
+	}
+
+	if plaintext, err := utils.Decrypt(secret2.String, helpers.HexHash[:64]); err != nil {
+		t.Fatalf("Password decryption failed: %s", err.Error())
+	} else {
+		require.Equal(t, "secret[_string='3a7!ng40oD']@0.1.1.1", plaintext)
+		require.Equal(t, "secret[_label='password']@0.1.1.1", secret2.Label)
+	}
 
 	var entryCount int64
 	helpers.CountEntries(t, db, &entryCount)

@@ -22,4 +22,6 @@ const (
 	ErrorNotFound          				string = "Record not found."
 	ErrorNoRowsAffected    				string = "result.RowsAffected == 0"
 	ErrorToken						 				string = "Invalid token."
+	ErrorEncrypt									string = "Failed encryption."
+	ErrorDecrypt									string = "Failed decryption."
 )

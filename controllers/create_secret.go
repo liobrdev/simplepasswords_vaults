@@ -52,7 +52,7 @@ func (H Handler) CreateSecret(c *fiber.Ctx) error {
 
 	var secret models.Secret
 
-	if secretSlug, err := utils.GenerateSlug(32); err != nil {
+	if secretSlug, err := utils.GenerateSlug(16); err != nil {
 		return utils.RespondWithError(
 			c, 500, utils.CreateSecret, "Failed to generate `secret.Slug`.", err.Error(),
 		)

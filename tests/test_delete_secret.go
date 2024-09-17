@@ -24,7 +24,7 @@ func testDeleteSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 	})
 
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
-		slug := "notEvenARealSlug"
+		slug := "notARealSlug"
 		testDeleteSecretClientError(t, app, conf, 400, utils.ErrorSecretSlug, slug, slug)
 	})
 

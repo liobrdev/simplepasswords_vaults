@@ -35,7 +35,7 @@ func (H Handler) CreateVault(c *fiber.Ctx) error {
 
 	var vault models.Vault
 
-	if vaultSlug, err := utils.GenerateSlug(32); err != nil {
+	if vaultSlug, err := utils.GenerateSlug(16); err != nil {
 		return utils.RespondWithError(
 			c, 500, utils.CreateVault,"Failed to generate `vault.Slug`.", err.Error(),
 		)

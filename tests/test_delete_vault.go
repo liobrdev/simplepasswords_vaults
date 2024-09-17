@@ -26,7 +26,7 @@ func testDeleteVault(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 	})
 
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
-		slug := "notEvenARealSlug"
+		slug := "notARealSlug"
 		testDeleteVaultClientError(t, app, conf, 400, utils.ErrorVaultSlug, slug, slug)
 	})
 

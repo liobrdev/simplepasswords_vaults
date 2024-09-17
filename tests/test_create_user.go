@@ -96,7 +96,7 @@ func testCreateUser(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppC
 	})
 
 	t.Run("too_short_user_slug_400_bad_request", func(t *testing.T) {
-		slug := helpers.NewSlug(t)[:31]
+		slug := helpers.NewSlug(t)[:15]
 		testCreateUserClientError(
 			t, app, conf, 400, utils.ErrorUserSlug, slug, fmt.Sprintf(bodyFmt, slug),
 		)

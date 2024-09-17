@@ -151,7 +151,7 @@ func testCreateVault(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 
 		validBodyIrrelevantData := `{` +
 			fmt.Sprintf(`"user_slug":"%s","vault_title":"%s",`, userSlug, vaultTitle) +
-			`"vault_slug":"notEvenARealSlug",` +
+			`"vault_slug":"notARealSlug",` +
 			`"vault_created_at":"10/12/22"` +
 			`}`
 

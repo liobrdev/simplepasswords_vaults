@@ -416,13 +416,13 @@ func testCreateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 			`"secret_label":"secret[_label='username']@0.0.2.0",` +
 			`"secret_string":"secret[_string='foodeater1234']@0.0.2.0",` +
 			`"secret_priority":0,` +
-			`"secret_slug":"notEvenARealSlug_0",` +
+			`"secret_slug":"notARealSlug_0",` +
 			`"secret_created_at":"10/12/22"` +
 			`},{` +
 			`"secret_label":"secret[_label='password']@0.0.2.1",` +
 			`"secret_string":"secret[_string='3a7!ng40oD']@0.0.2.1",` +
 			`"secret_priority":1,` +
-			`"secret_slug":"notEvenARealSlug_1",` +
+			`"secret_slug":"notARealSlug_1",` +
 			`"secret_created_at":"10/12/22"` +
 			`}]`
 

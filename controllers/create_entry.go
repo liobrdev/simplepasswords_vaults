@@ -87,7 +87,7 @@ func (H Handler) CreateEntry(c *fiber.Ctx) error {
 
 	var entry models.Entry
 
-	if entrySlug, err := utils.GenerateSlug(32); err != nil {
+	if entrySlug, err := utils.GenerateSlug(16); err != nil {
 		return utils.RespondWithError(
 			c, 500, utils.CreateEntry, "Failed to generate `entry.Slug`.", err.Error(),
 		)
@@ -107,7 +107,7 @@ func (H Handler) CreateEntry(c *fiber.Ctx) error {
 		password := c.Get(H.Conf.PASSWORD_HEADER_KEY)
 
 		for _, secret := range(body.Secrets) {
-			if slug, err := utils.GenerateSlug(32); err != nil {
+			if slug, err := utils.GenerateSlug(16); err != nil {
 				return fmt.Errorf("`secret.Slug` generation failed: %s", err.Error())
 			} else if encryptedString, err := utils.Encrypt(secret.String, password); err != nil {
 				return fmt.Errorf("`secret.String` encryption failed: %s", err.Error())

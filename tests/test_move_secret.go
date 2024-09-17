@@ -129,13 +129,13 @@ func testMoveSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppC
 		)
 
 		testMoveSecretClientError(
-			t, app, conf, 400, utils.ErrorEntrySlug, dummySlug[:31], dummySlug,
-			fmt.Sprintf(`{"secret_priority":"0","entry_slug":"%s"}`, dummySlug[:31]),
+			t, app, conf, 400, utils.ErrorEntrySlug, dummySlug[:15], dummySlug,
+			fmt.Sprintf(`{"secret_priority":"0","entry_slug":"%s"}`, dummySlug[:15]),
 		)
 
 		testMoveSecretClientError(
-			t, app, conf, 400, utils.ErrorEntrySlug, dummySlug[:31] + "!", dummySlug,
-			fmt.Sprintf(`{"secret_priority":"0","entry_slug":"%s"}`, dummySlug[:31] + "!"),
+			t, app, conf, 400, utils.ErrorEntrySlug, dummySlug[:15] + "!", dummySlug,
+			fmt.Sprintf(`{"secret_priority":"0","entry_slug":"%s"}`, dummySlug[:15] + "!"),
 		)
 	})
 
@@ -208,122 +208,6 @@ func testMoveSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppC
 			fmt.Sprintf(`{"secret_priority":"3","entry_slug":"%s"}`, secrets[16].EntrySlug),
 		)
 	})
-
-	// t.Run("null_or_empty_object_400_bad_request", func(t *testing.T) {
-	// 	_, _, _, secrets := setup.SetUpWithData(t, db)
-
-	// 	testMoveSecretClientError(
-	// 		t, app, conf, 400, utils.ErrorEmptyMoveSecret, "Null or empty object or fields.",
-	// 		secrets[0].Slug, "null",
-	// 	)
-
-	// 	testMoveSecretClientError(
-	// 		t, app, conf, 400, utils.ErrorEmptyMoveSecret, "Null or empty object or fields.",
-	// 		secrets[0].Slug, "{}",
-	// 	)
-	// })
-
-	// t.Run("both_fields_null_or_empty_or_missing_400_bad_request", func(t *testing.T) {
-	// 	_, _, _, secrets := setup.SetUpWithData(t, db)
-
-	// 	testMoveSecretClientError(
-	// 		t, app, conf, 400, utils.ErrorEmptyMoveSecret, "Null or empty object or fields.",
-	// 		secrets[0].Slug, `{"secret_label":"","secret_string":""}`,
-	// 	)
-
-	// 	testMoveSecretClientError(
-	// 		t, app, conf, 400, utils.ErrorEmptyMoveSecret, "Null or empty object or fields.",
-	// 		secrets[0].Slug, `{"secret_label":null,"secret_string":null}`,
-	// 	)
-
-	// 	testMoveSecretClientError(
-	// 		t, app, conf, 400, utils.ErrorEmptyMoveSecret, "Null or empty object or fields.",
-	// 		secrets[0].Slug, `{"weird_label":"abc","weird_string":"123"}`,
-	// 	)
-	// })
-
-	// t.Run("too_long_secret_label_400_bad_request", func(t *testing.T) {
-	// 	if label, err := utils.GenerateSlug(256); err != nil {
-	// 		t.Fatalf("Generate long string failed: %s", err.Error())
-	// 	} else {
-	// 		testMoveSecretClientError(
-	// 			t, app, conf, 400, utils.ErrorSecretLabel, "Too long", dummySlug,
-	// 			fmt.Sprintf(`{"secret_label":"%s"}`, label),
-	// 		)
-	// 	}
-	// })
-
-	// t.Run("too_long_secret_string_400_bad_request", func(t *testing.T) {
-	// 	if str, err := utils.GenerateSlug(1001); err != nil {
-	// 		t.Fatalf("Generate long string failed: %s", err.Error())
-	// 	} else {
-	// 		testMoveSecretClientError(
-	// 			t, app, conf, 400, utils.ErrorSecretString, "Too long", dummySlug,
-	// 			fmt.Sprintf(`{"secret_string":"%s"}`, str),
-	// 		)
-	// 	}
-	// })
-
-	// t.Run("valid_body_secret_label_already_exists_500_error", func(t *testing.T) {
-	// 	_, _, _, secrets := setup.SetUpWithData(t, db)
-
-	// 	testMoveSecretClientError(
-	// 		t, app, conf, 500, utils.ErrorFailedDB,
-	// 		"UNIQUE constraint failed: secrets.label, secrets.entry_slug", secrets[0].Slug,
-	// 		fmt.Sprintf(`{"secret_label":"%s"}`, secrets[1].Label),
-	// 	)
-	// })
-
-	// t.Run("valid_body_404_not_found", func(t *testing.T) {
-	// 	setup.SetUpWithData(t, db)
-	// 	testMoveSecretClientError(
-	// 		t, app, conf, 404, utils.ErrorNoRowsAffected, "Likely that slug was not found.",
-	// 		dummySlug, `{"secret_label":"updated_secret"}`,
-	// 	)
-	// })
-
-	// t.Run("valid_body_204_no_content", func(t *testing.T) {
-	// 	_, _, _, secrets := setup.SetUpWithData(t, db)
-	// 	slug := secrets[0].Slug
-
-	// 	updatedSecretLabel := "secret[_label='updated_label']@0.0.0.0"
-
-	// 	testMoveSecretSuccess(
-	// 		t, app, db, conf, slug, updatedSecretLabel, "",
-	// 		fmt.Sprintf(`{"secret_label":"%s"}`, updatedSecretLabel),
-	// 	)
-
-	// 	updatedSecretString := "secret[_string='updated_string']@0.0.0.0"
-
-	// 	testMoveSecretSuccess(
-	// 		t, app, db, conf, slug, "", updatedSecretString,
-	// 		fmt.Sprintf(`{"secret_string":"%s"}`, updatedSecretString),
-	// 	)
-
-	// 	updatedSecretLabel = "secret[_label='updated_again_label']@0.0.0.0"
-	// 	updatedSecretString = "secret[_string='updated_again_string']@0.0.0.0"
-
-	// 	testMoveSecretSuccess(
-	// 		t, app, db, conf, slug, updatedSecretLabel, updatedSecretString, fmt.Sprintf(
-	// 			`{"secret_label":"%s","secret_string":"%s"}`, updatedSecretLabel, updatedSecretString,
-	// 		),
-	// 	)
-	// })
-
-	// t.Run("valid_body_irrelevant_data_204_no_content", func(t *testing.T) {
-	// 	_, _, _, secrets := setup.SetUpWithData(t, db)
-	// 	slug := secrets[0].Slug
-
-	// 	updatedSecretLabel := "secret[_label='updated_label']@0.0.0.0"
-	// 	updatedSecretString := "secret[_string='updated_string']@0.0.0.0"
-
-	// 	testMoveSecretSuccess(
-	// 		t, app, db, conf, slug, updatedSecretLabel, updatedSecretString, fmt.Sprintf(
-	// 			`{"secret_label":"%s","secret_string":"%s","is_real_field":false,"a":1}`,
-	// 			updatedSecretLabel, updatedSecretString,
-	// 		),
-	// 	)
-	// })
 }
 
 func testMoveSecretClientError(

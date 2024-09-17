@@ -135,7 +135,7 @@ func testUpdateEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.App
 
 		validBodyIrrelevantData := "{" +
 			fmt.Sprintf(`"entry_title":"%s",`, updatedEntryTitle) +
-			`"entry_slug":"notEvenARealSlug",` +
+			`"entry_slug":"notARealSlug",` +
 			`"entry_created_at":"10/12/22"` +
 			"}"
 

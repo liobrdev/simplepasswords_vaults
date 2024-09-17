@@ -20,7 +20,7 @@ import (
 
 func testRetrieveEntry(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.AppConfig) {
 	t.Run("invalid_slug_400_bad_request", func(t *testing.T) {
-		slug := "notEvenARealSlug"
+		slug := "notARealSlug"
 		testRetrieveEntryClientError(t, app, conf, 400, utils.ErrorEntrySlug, slug, slug)
 	})
 

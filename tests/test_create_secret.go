@@ -330,7 +330,7 @@ func testCreateSecret(t *testing.T, app *fiber.App, db *gorm.DB, conf *config.Ap
 				`"entry_slug":"%s",`+
 				`"secret_label":"%s",`+
 				`"secret_string":"%s",`+
-				`"secret_slug":"notEvenARealSlug",`+
+				`"secret_slug":"notARealSlug",`+
 				`"secret_created_at":"10/12/22"`+
 				`}`,
 			userSlug, vaultSlug, entrySlug, secretLabel, secretString,
